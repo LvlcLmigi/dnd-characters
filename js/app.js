@@ -121,9 +121,9 @@
     if (chips.length) head.push(`<ul class="d-chips">${chips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`);
 
     const desc = [];
-    if (has(c.quote)) desc.push(`<p class="d-quote">“${esc(c.quote)}”</p>`);
+    if (has(c.quote)) desc.push(`<p class="d-quote">“${D.inlineFormat(c.quote)}”</p>`);
     const bio = Array.isArray(c.bio) ? c.bio : has(c.bio) ? [c.bio] : [];
-    if (bio.filter(has).length) desc.push(`<div class="d-bio">${bio.filter(has).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`);
+    if (bio.filter(has).length) desc.push(`<div class="d-bio">${D.blockFormat(bio.filter(has))}</div>`);
 
     const facts = [
       ["Race", c.race], ["Subrace", c.subrace],
@@ -145,8 +145,8 @@
         `<li${Number(v) === top ? ' class="is-high"' : ""}><span class="ab">${esc(k)}</span><span class="score">${esc(v)}</span><span class="mod">${mod(v)}</span></li>`).join("")}</ul>`);
     }
     const traits = (c.traits || []).filter(has);
-    if (traits.length) panel.push(`<h3>Quirks</h3><ul class="traits">${traits.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`);
-    if (has(c.goals)) panel.push(`<h3>Goals</h3><p>${esc(c.goals)}</p>`);
+    if (traits.length) panel.push(`<h3>Quirks</h3><ul class="traits">${traits.map((t) => `<li>${D.inlineFormat(t)}</li>`).join("")}</ul>`);
+    if (has(c.goals)) panel.push(`<h3>Goals</h3>${D.blockFormat([c.goals])}`);
     const panelHTML = panel.length ? `<div class="panel">${panel.join("")}</div>` : "";
     const descHTML = desc.length ? `<div class="d-desc">${desc.join("")}</div>` : "";
     const pos = detailsPos();

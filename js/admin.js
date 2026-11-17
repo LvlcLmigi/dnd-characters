@@ -355,6 +355,24 @@
     <input type="${opts.type || "text"}" ${attrs} value="${esc(value)}"${opts.list ? ` list="${opts.list}"` : ""}${opts.placeholder ? ` placeholder="${esc(opts.placeholder)}"` : ""}${opts.id ? ` id="${opts.id}"` : ""}${opts.min !== undefined ? ` min="${opts.min}"` : ""}${opts.max !== undefined ? ` max="${opts.max}"` : ""}></label>`;
   const area = (label, attrs, value, opts = {}) => `<label class="field${opts.full ? " full" : ""}"><span>${label}${opts.hint ? ` <small>${opts.hint}</small>` : ""}</span>
     <textarea ${attrs} rows="${opts.rows || 4}"${opts.placeholder ? ` placeholder="${esc(opts.placeholder)}"` : ""}>${esc(value)}</textarea></label>`;
+  // textarea with a small formatting toolbar (bold, italic, headings…); see DND.blockFormat for the codes
+  const fmtArea = (label, attrs, value, opts = {}) => `<div class="field${opts.half ? "" : " full"}">
+    <span>${label}${opts.hint ? ` <small>${opts.hint}</small>` : ""}</span>
+    <div class="fmt-box">
+      <div class="fmt-bar" role="toolbar" aria-label="Formatting">
+        <button type="button" data-fmt="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button type="button" data-fmt="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button type="button" data-fmt="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+        ${opts.headings ? `<span class="fmt-sep"></span>
+        <button type="button" data-fmt="h1" title="Heading">H1</button>
+        <button type="button" data-fmt="h2" title="Smaller heading">H2</button>
+        <button type="button" data-fmt="list" title="Bullet list">• List</button>
+        <button type="button" data-fmt="quote" title="Pull quote">❝</button>` : ""}
+      </div>
+      <textarea ${attrs} data-fmt-target rows="${opts.rows || 4}">${esc(value)}</textarea>
+    </div>
+    ${opts.headings ? `<small class="fmt-help">Codes also work: <code>**bold**</code> <code>*italic*</code> <code>__underline__</code> <code># Heading</code> <code>## Smaller</code> <code>- list</code> <code>&gt; quote</code></small>` : ""}
+  </div>`;
   const chipRow = (key, options, current) => `<span class="chips">${options.map(([v, l]) =>
     `<button class="chip${String(current ?? "") === v ? " on" : ""}" data-chip="${key}" data-val="${esc(v)}">${esc(l)}</button>`).join("")}</span>`;
   const colorField = (attrs, value) => `<span class="color-input"><input type="color" ${attrs} value="${esc(/^#[0-9a-f]{6}$/i.test(value) ? value : "#000000")}" aria-label="Pick colour"><input type="text" ${attrs} value="${esc(value)}" spellcheck="false" aria-label="Colour code"></span>`;
@@ -467,9 +485,9 @@
       <h2>Story</h2>
       <div class="grid">
         ${text("Quote", 'data-c="quote"', c.quote, { full: true, placeholder: "Something they'd say" })}
-        ${area("Biography", 'data-c="bio" data-type="paras"', (c.bio || []).join("\n\n"), { full: true, rows: 7, hint: "(leave a blank line between paragraphs)" })}
-        ${area("Quirks &amp; traits", 'data-c="traits" data-type="lines"', (c.traits || []).join("\n"), { rows: 4, hint: "(one per line)" })}
-        ${area("Goals", 'data-c="goals"', c.goals, { rows: 4 })}
+        ${fmtArea("Biography", 'data-c="bio" data-type="paras"', (c.bio || []).join("\n\n"), { rows: 10, hint: "(leave a blank line between paragraphs)", headings: true })}
+        ${fmtArea("Quirks &amp; traits", 'data-c="traits" data-type="lines"', (c.traits || []).join("\n"), { rows: 4, hint: "(one per line)", half: true })}
+        ${fmtArea("Goals", 'data-c="goals"', c.goals, { rows: 4, half: true })}
       </div>
     </section>
 
@@ -888,8 +906,53 @@
     $$(".swatch").forEach((s) => s.classList.toggle("on", s.dataset.swatch.toLowerCase() === String(v).toLowerCase()));
   }
 
+  function applyFormat(ta, kind) {
+    const v = ta.value, a = ta.selectionStart, b = ta.selectionEnd;
+    const sel = v.slice(a, b);
+    let out, ca, cb;
+    const wrap = (mark, placeholder) => {
+      const inner = sel || placeholder;
+      out = v.slice(0, a) + mark + inner + mark + v.slice(b);
+      ca = a + mark.length; cb = ca + inner.length;
+    };
+    const prefixLines = (pre, placeholder) => {
+      const ls = v.lastIndexOf("\n", a - 1) + 1;
+      const le = v.indexOf("\n", b); const lineEnd = le === -1 ? v.length : le;
+      const block = v.slice(ls, lineEnd) || placeholder;
+      const done = block.split("\n").map((l) => pre + l.replace(/^(#{1,3}\s+|[-•*]\s+|>\s?)/, "")).join("\n");
+      out = v.slice(0, ls) + done + v.slice(lineEnd);
+      ca = ls; cb = ls + done.length;
+    };
+    if (kind === "bold") wrap("**", "bold text");
+    else if (kind === "italic") wrap("*", "italic text");
+    else if (kind === "underline") wrap("__", "underlined text");
+    else if (kind === "h1") prefixLines("# ", "Heading");
+    else if (kind === "h2") prefixLines("## ", "Smaller heading");
+    else if (kind === "list") prefixLines("- ", "List item");
+    else if (kind === "quote") prefixLines("> ", "A memorable line");
+    else return;
+    ta.value = out;
+    ta.focus();
+    ta.setSelectionRange(ca, cb);
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  editor.addEventListener("mousedown", (e) => { if (e.target.closest("[data-fmt]")) e.preventDefault(); });   // keep the text selected
+  editor.addEventListener("keydown", (e) => {
+    const ta = e.target.closest && e.target.closest("[data-fmt-target]");
+    if (!ta || !(e.ctrlKey || e.metaKey)) return;
+    const k = e.key.toLowerCase();
+    if (k === "b" || k === "i" || k === "u") { e.preventDefault(); applyFormat(ta, { b: "bold", i: "italic", u: "underline" }[k]); }
+  });
+
   editor.addEventListener("click", async (e) => {
     const t = e.target;
+    const fb = t.closest("[data-fmt]");
+    if (fb) {
+      e.preventDefault();
+      const ta = fb.closest(".fmt-box").querySelector("[data-fmt-target]");
+      applyFormat(ta, fb.dataset.fmt);
+      return;
+    }
     const sw = t.closest("[data-swatch]");
     if (sw && cur()) {
       e.preventDefault();

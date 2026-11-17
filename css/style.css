@@ -312,6 +312,15 @@ html[data-card-sub="off"] .card-sub { display: none; }
 .d-quote { margin: 30px 0 0; font-size: clamp(22px, 2.2vw, 28px); font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
 .d-bio { margin-top: 22px; }
 .d-bio p { margin: 0 0 1em; font-size: 18px; line-height: 1.65; }
+.d-bio h3, .d-bio h4 { font-family: var(--font-head); font-weight: 900; letter-spacing: -.015em; line-height: 1.15; margin: 1.4em 0 .5em; }
+.d-bio h3 { font-size: clamp(24px, 2.2vw, 30px); }
+.d-bio h4 { font-size: clamp(19px, 1.6vw, 22px); opacity: .9; }
+.d-bio > :first-child { margin-top: 0; }
+.d-bio ul { margin: 0 0 1em; padding-left: 1.2em; font-size: 18px; line-height: 1.6; }
+.d-bio li { margin: .25em 0; }
+.d-bio blockquote { margin: 1.2em 0; padding: 4px 0 4px 18px; border-left: 4px solid color-mix(in srgb, var(--on-c) 55%, transparent); font-size: 20px; font-weight: 600; font-style: italic; line-height: 1.45; }
+.d-bio strong, .panel strong { font-weight: 800; }
+.panel p + p { margin-top: .6em; }
 
 .d-body { margin-top: 28px; }
 .d-body > * + * { margin-top: 28px; }

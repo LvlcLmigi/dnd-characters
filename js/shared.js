@@ -206,5 +206,40 @@
     }
   }
 
-  window.DND = { FONTS, DEFAULT_SITE, PALETTE, PATTERNS, ENTRANCES, CARD_ENTRANCES, GLOWS, SHADOW_DIRS, artFilter, inkFor, shade, luminance, fontHref, fontStack, mergeSite, applyStyle };
+  /* ---------- simple text formatting for story fields ----------
+     **bold**  *italic*  __underline__  ~~strike~~
+     # Heading   ## Smaller heading   (at the start of a line)
+     - item      (bullet list)        > text   (pull quote)
+     Text is escaped first, so nothing typed can inject HTML. */
+  const escHTML = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function inlineFormat(text) {
+    return escHTML(text)
+      .replace(/\*\*(?=\S)([\s\S]*?\S)\*\*/g, "<strong>$1</strong>")
+      .replace(/__(?=\S)([\s\S]*?\S)__/g, "<u>$1</u>")
+      .replace(/~~(?=\S)([\s\S]*?\S)~~/g, "<s>$1</s>")
+      .replace(/(^|[^*\w])\*(?=\S)([^*\n]*?\S)\*(?!\w)/g, "$1<em>$2</em>")
+      .replace(/(^|[^\w])_(?=\S)([^_\n]*?\S)_(?!\w)/g, "$1<em>$2</em>");
+  }
+  function blockFormat(paragraphs) {
+    const out = [];
+    (Array.isArray(paragraphs) ? paragraphs : [paragraphs]).forEach((para) => {
+      const lines = String(para ?? "").split("\n");
+      let buf = [], list = [];
+      const flushP = () => { if (buf.length) { out.push(`<p>${buf.map(inlineFormat).join("<br>")}</p>`); buf = []; } };
+      const flushL = () => { if (list.length) { out.push(`<ul>${list.map((l) => `<li>${inlineFormat(l)}</li>`).join("")}</ul>`); list = []; } };
+      lines.forEach((raw) => {
+        const line = raw.replace(/\s+$/, "");
+        let m;
+        if (!line.trim()) { flushP(); flushL(); return; }
+        if ((m = line.match(/^\s*(#{1,3})\s+(.+)$/))) { flushP(); flushL(); const lvl = m[1].length === 1 ? 3 : 4; out.push(`<h${lvl}>${inlineFormat(m[2])}</h${lvl}>`); return; }
+        if ((m = line.match(/^\s*[-•*]\s+(.+)$/))) { flushP(); list.push(m[1]); return; }
+        if ((m = line.match(/^\s*>\s?(.*)$/))) { flushP(); flushL(); out.push(`<blockquote>${inlineFormat(m[1])}</blockquote>`); return; }
+        flushL(); buf.push(line);
+      });
+      flushP(); flushL();
+    });
+    return out.join("");
+  }
+
+  window.DND = { inlineFormat, blockFormat, FONTS, DEFAULT_SITE, PALETTE, PATTERNS, ENTRANCES, CARD_ENTRANCES, GLOWS, SHADOW_DIRS, artFilter, inkFor, shade, luminance, fontHref, fontStack, mergeSite, applyStyle };
 })();

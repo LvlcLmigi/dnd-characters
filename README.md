@@ -47,3 +47,15 @@ You can also edit the two JSON files directly on GitHub if you ever need to.
 
 ## Updating the code
 `index.html` and `admin.html` load the CSS/JS with a `?v=` version tag. Bump it whenever those files change so browsers don't use a cached copy (GitHub Pages caches for 10 minutes).
+
+## Formatting story text
+The Biography, Goals and Quirks boxes in admin have Bold / Italic / Underline buttons (Ctrl+B / I / U), and the Biography box also has heading, list and quote buttons. They insert these codes, which you can also type yourself:
+
+| Type | Shows as |
+|---|---|
+| `**bold**` | **bold** |
+| `*italic*` | *italic* |
+| `__underline__` | underline |
+| `# Heading` / `## Smaller heading` | headings (at the start of a line) |
+| `- item` | bullet list |
+| `> line` | pull quote |
