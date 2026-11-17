@@ -33,11 +33,17 @@
       // home page
       heroStyle: "compact",            // compact | big
       folderDisplay: "tabs",           // tabs | sections
-      // character cards
-      cardBackdrop: "glow",            // none | glow | circle | outline | shadow
-      backdropColor: "#ffffff",
-      backdropStrength: 55,            // 0-100
-      backdropOnPage: false,
+      // pop-out effects on the character art (cards, and optionally their page)
+      shadow: "on",                    // on | none   - offset drop shadow
+      shadowColor: "#000000",
+      shadowOpacity: 45,               // 0-100
+      shadowDistance: 10,              // px on a card (scaled up on character pages)
+      shadowSoftness: 6,               // blur px, 0 = hard sticker-style edge
+      shadowDirection: "down-right",   // down-right | down | down-left
+      glow: "none",                    // none | glow | outline   - follows the character's shape
+      glowColor: "#ffffff",
+      glowSize: 4,                     // px on a card
+      effectsOnPage: true,
       // character pages
       lockHeader: true,                // name + details stay put, only the description scrolls
       detailsPosition: "above",        // above | below | beside
@@ -49,7 +55,38 @@
     ["dots", "Dots"], ["grid", "Grid"], ["stripes", "Stripes"], ["diamonds", "Diamonds"],
     ["checks", "Checks"], ["sparkles", "Sparkles"], ["waves", "Waves"], ["none", "None"],
   ];
-  const BACKDROPS = [["none", "None"], ["glow", "Soft glow"], ["circle", "Circle"], ["outline", "Outline"], ["shadow", "Dark halo"]];
+  const GLOWS = [["none", "None"], ["glow", "Glow"], ["outline", "Outline"]];
+  const SHADOW_DIRS = [["down-left", "↙ Down-left"], ["down", "↓ Down"], ["down-right", "↘ Down-right"]];
+
+  function rgba(hex, alpha) {
+    const rgb = hexToRgb(hex) || [0, 0, 0];
+    return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${Math.max(0, Math.min(1, alpha)).toFixed(2)})`;
+  }
+  // CSS filter for a character's art. scale: 1 on cards, bigger on their page; lift: extra pop on hover.
+  function artFilter(style, c, scale, lift) {
+    c = c || {};
+    const n = (v, d) => (isNaN(Number(v)) ? d : Number(v));
+    const parts = [];
+    const glow = c.glow || style.glow || "none";
+    const gc = c.glowColor || style.glowColor || "#ffffff";
+    const gs = Math.max(1, n(style.glowSize, 4)) * scale;
+    if (glow === "outline") {
+      const w = Math.max(1, Math.round(gs * 0.75));
+      parts.push(`drop-shadow(${w}px 0 0 ${gc})`, `drop-shadow(-${w}px 0 0 ${gc})`, `drop-shadow(0 ${w}px 0 ${gc})`, `drop-shadow(0 -${w}px 0 ${gc})`);
+    } else if (glow === "glow") {
+      parts.push(`drop-shadow(0 0 ${(gs * 0.6).toFixed(1)}px ${gc})`, `drop-shadow(0 0 ${(gs * 1.6).toFixed(1)}px ${gc})`);
+    }
+    const shadow = c.shadow || style.shadow || "on";
+    if (shadow !== "none") {
+      const d = n(style.shadowDistance, 10) * scale * (lift || 1);
+      const dir = c.shadowDirection || style.shadowDirection || "down-right";
+      const dx = dir === "down" ? 0 : dir === "down-left" ? -d * 0.8 : d * 0.8;
+      const dy = d;
+      const blur = n(style.shadowSoftness, 6) * scale * (lift ? 1.3 : 1);
+      parts.push(`drop-shadow(${dx.toFixed(1)}px ${dy.toFixed(1)}px ${blur.toFixed(1)}px ${rgba(style.shadowColor || "#000000", n(style.shadowOpacity, 45) / 100)})`);
+    }
+    return parts.length ? parts.join(" ") : "none";
+  }
 
   const PALETTE = ["#d8274d", "#e0611a", "#1fa463", "#1a5cff", "#8e3fd6", "#e64fa0", "#12a5b8", "#c9a00e"];
 
@@ -86,6 +123,11 @@
     const s = Object.assign({}, DEFAULT_SITE, site || {});
     s.style = Object.assign({}, DEFAULT_SITE.style, (site && site.style) || {});
     s.folders = Array.isArray(s.folders) ? s.folders.filter((f) => f && f.id) : [];
+    // settings from the earlier "backdrop" version
+    if (s.style.cardBackdrop !== undefined) {
+      if (!(site.style && site.style.glow) && (s.style.cardBackdrop === "glow" || s.style.cardBackdrop === "outline")) s.style.glow = s.style.cardBackdrop;
+      ["cardBackdrop", "backdropColor", "backdropStrength", "backdropOnPage"].forEach((k) => delete s.style[k]);
+    }
     return s;
   }
 
@@ -108,9 +150,7 @@
     r.setProperty("--hero-image", url(st.heroImage));
     r.setProperty("--browse-image", url(st.browseImage));
     doc.documentElement.dataset.hero = st.heroStyle === "big" ? "big" : "compact";
-    r.setProperty("--bd-color", st.backdropColor || "#ffffff");
-    r.setProperty("--bd-strength", String(Math.max(0, Math.min(100, Number(st.backdropStrength) || 0)) / 100));
-    r.setProperty("--bd-px", (1 + Math.round((Number(st.backdropStrength) || 0) / 25)) + "px");
+
     const z = Math.max(60, Math.min(160, Number(st.zoom) || 100));
     doc.body.style.zoom = z === 100 ? "" : String(z / 100);
     r.setProperty("--zoom", String(z / 100));   // full-height areas divide by this so they still fill the screen
@@ -127,5 +167,5 @@
     }
   }
 
-  window.DND = { FONTS, DEFAULT_SITE, PALETTE, PATTERNS, BACKDROPS, inkFor, shade, luminance, fontHref, fontStack, mergeSite, applyStyle };
+  window.DND = { FONTS, DEFAULT_SITE, PALETTE, PATTERNS, GLOWS, SHADOW_DIRS, artFilter, inkFor, shade, luminance, fontHref, fontStack, mergeSite, applyStyle };
 })();

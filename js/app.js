@@ -29,7 +29,7 @@
   const st = () => site.style;
   const cardPattern = (c) => c.cardPattern || st().pattern || "dots";
   const pagePattern = (c) => c.pagePattern || st().pagePattern || cardPattern(c);
-  const cardBackdrop = (c) => c.cardBackdrop || st().cardBackdrop || "none";
+  const cardFx = (c) => `--fx:${esc(D.artFilter(st(), c, 1))};--fx-hover:${esc(D.artFilter(st(), c, 1, 1.6))}`;
   const colorOf = (c) => c.color || c.tone || D.PALETTE[c._n % D.PALETTE.length];
   const colorVars = (c) => `--c:${esc(colorOf(c))};--on-c:${D.inkFor(colorOf(c))}`;
   const imgOf = (c, key) => c[key] || (key === "backgroundImage" ? c.background_image : "") || "";
@@ -54,8 +54,8 @@
 
   const cardHTML = (c, i) => `
       <li style="--i:${i}">
-        <a class="card${c.hidden ? " is-hidden" : ""}" href="#${esc(c._id)}" style="${colorVars(c)}" data-pattern="${esc(cardPattern(c))}" data-backdrop="${esc(cardBackdrop(c))}">
-          <span class="card-box"><span class="card-backdrop"></span><span class="card-figure">${art(c, "card")}</span></span>
+        <a class="card${c.hidden ? " is-hidden" : ""}" href="#${esc(c._id)}" style="${colorVars(c)};${cardFx(c)}" data-pattern="${esc(cardPattern(c))}">
+          <span class="card-box"><span class="card-figure">${art(c, "card")}</span></span>
           <span class="card-name">${esc(c.name)}</span>
           <span class="card-sub">${esc(subline(c))}</span>
         </a>
@@ -160,9 +160,8 @@
   let current = null, swapTimer = null;
 
   function fill(c) {
-    detail.setAttribute("style", colorVars(c));
+    detail.setAttribute("style", colorVars(c) + (st().effectsOnPage !== false ? `;--fx-page:${D.artFilter(st(), c, 2.6)}` : ""));
     detail.dataset.pattern = pagePattern(c);
-    detail.dataset.pageBackdrop = st().backdropOnPage ? cardBackdrop(c) : "none";
     detail.classList.toggle("is-locked", st().lockHeader !== false);
     ["above", "below", "beside"].forEach((p) => detail.classList.toggle("pos-" + p, detailsPos() === p));
     const scene = $("#detail-scene");

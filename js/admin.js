@@ -49,7 +49,7 @@
   /* =========================================================
      Serialising & dirty tracking
      ========================================================= */
-  const CHAR_KEYS = ["id", "name", "epithet", "player", "color", "hidden", "folder", "cardPattern", "pagePattern", "cardBackdrop", "race", "subrace", "class", "subclass", "multiclass", "level",
+  const CHAR_KEYS = ["id", "name", "epithet", "player", "color", "hidden", "folder", "cardPattern", "pagePattern", "shadow", "glow", "glowColor", "race", "subrace", "class", "subclass", "multiclass", "level",
     "background", "alignment", "deity", "age", "height", "pronouns", "status", "stats", "quote", "bio", "traits", "goals", "extra", "art", "backgroundImage"];
 
   function cleanChar(c) {
@@ -406,7 +406,9 @@
         ${uploadBox("Page background", "backgroundImage", c.backgroundImage, { kind: "bg", help: "Optional scene behind them on their page. It fades into their colour on the text side." })}
       </div>
       <div class="grid" style="margin-top:18px">
-        <label class="field full"><span>Glow / backdrop behind them on their card</span>${chipRow("c.cardBackdrop", [["", "Site default"], ...D.BACKDROPS], c.cardBackdrop || "")}</label>
+        <label class="field full"><span>Drop shadow</span>${chipRow("c.shadow", [["", "Site default"], ["on", "On"], ["none", "Off"]], c.shadow || "")}</label>
+        <label class="field full"><span>Glow / outline around them</span>${chipRow("c.glow", [["", "Site default"], ...D.GLOWS], c.glow || "")}</label>
+        <label class="field"><span>Glow / outline colour</span><span class="color-row">${colorField('data-c="glowColor"', c.glowColor || state.site.style.glowColor)}${c.glowColor ? '<button class="link-btn" data-act="glow-color-reset">Use site colour</button>' : ""}</span></label>
         <label class="field full"><span>Card pattern</span>${chipRow("c.cardPattern", [["", "Site default"], ...D.PATTERNS], c.cardPattern || "")}</label>
         <label class="field full"><span>Pattern on their page</span>${chipRow("c.pagePattern", [["", "Site default"], ...D.PATTERNS], c.pagePattern || "")}</label>
       </div>
@@ -547,10 +549,24 @@
         ${range("Card size", "cardSize", 160, 360, 10, "px")}
         ${range("Card corner roundness", "cardRadius", 0, 120, 2, "px")}
         <label class="field full"><span>Pattern</span>${chipRow("style.pattern", D.PATTERNS, st.pattern)}</label>
-        <label class="field full"><span>Glow / backdrop behind the character</span>${chipRow("style.cardBackdrop", D.BACKDROPS, st.cardBackdrop)}</label>
-        <label class="field"><span>Backdrop colour</span>${colorField('data-st="backdropColor"', st.backdropColor)}</label>
-        ${range("Backdrop strength", "backdropStrength", 0, 100, 5, "%")}
-        <label class="toggle full"><input type="checkbox" data-st="backdropOnPage" data-type="bool" ${st.backdropOnPage ? "checked" : ""}> Also put the backdrop behind characters on their own page</label>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>Pop-out effects on character art</h2>
+      <p class="hint">A drop shadow and a glow or outline that follow the shape of the character, so they stand out from their colour.</p>
+      <div class="grid">
+        <label class="field full"><span>Drop shadow</span>${chipRow("style.shadow", [["on", "On"], ["none", "Off"]], st.shadow)}</label>
+        <label class="field full"><span>Shadow direction</span>${chipRow("style.shadowDirection", D.SHADOW_DIRS, st.shadowDirection)}</label>
+        ${range("Shadow distance", "shadowDistance", 0, 30, 1, "px")}
+        ${range("Shadow softness", "shadowSoftness", 0, 24, 1, "px")}
+        ${range("Shadow darkness", "shadowOpacity", 0, 100, 5, "%")}
+        <label class="field"><span>Shadow colour</span>${colorField('data-st="shadowColor"', st.shadowColor)}</label>
+        <label class="field full"><span>Glow / outline</span>${chipRow("style.glow", D.GLOWS, st.glow)}</label>
+        <label class="field"><span>Glow / outline colour</span>${colorField('data-st="glowColor"', st.glowColor)}</label>
+        ${range("Glow / outline size", "glowSize", 1, 12, 1, "px")}
+        <label class="toggle full"><input type="checkbox" data-st="effectsOnPage" data-type="bool" ${st.effectsOnPage !== false ? "checked" : ""}> Use these effects on character pages too, not just the cards</label>
+        <p class="hint full" style="margin:0">Effects need art with a transparent background to follow the character's shape.</p>
       </div>
     </section>
 
@@ -722,7 +738,7 @@
     if (el.dataset.c && c) {
       const key = el.dataset.c;
       let v = readValue(el);
-      if (key === "color") { syncColorPair(el, v); if (!validColor(v)) return; renderSwatches(v); }
+      if (key === "color" || key === "glowColor") { syncColorPair(el, v); if (!validColor(v)) return; if (key === "color") renderSwatches(v); }
       if (key === "id") { v = slug(v); }
       if (key === "name") {
         const wasAuto = c.id === uniqueId(c.name, state.view.i) || c.id === slug(c.name);
@@ -866,6 +882,10 @@
         $$("[data-kv-k]").pop().focus();
         break;
       }
+      case "glow-color-reset":
+        delete c.glowColor;
+        renderEditor(); changed({ side: false });
+        break;
       case "folder-add": {
         state.site.folders = [...(state.site.folders || []), { id: "f-" + Date.now().toString(36), name: "New folder" }];
         renderEditor(); changed();
