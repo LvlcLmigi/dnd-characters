@@ -43,13 +43,14 @@
     importError: "",
     device: "desktop",
     previewReady: false,
+    sitePreviewChar: "",                    // character shown in the preview while on Site & style
     busy: false,
   };
 
   /* =========================================================
      Serialising & dirty tracking
      ========================================================= */
-  const CHAR_KEYS = ["id", "name", "epithet", "player", "color", "hidden", "folder", "cardPattern", "pagePattern", "shadow", "glow", "glowColor", "race", "subrace", "class", "subclass", "multiclass", "level",
+  const CHAR_KEYS = ["id", "name", "epithet", "player", "color", "hidden", "folder", "cardPattern", "pagePattern", "shadow", "glow", "glowColor", "artX", "artHeight", "artBottom", "race", "subrace", "class", "subclass", "multiclass", "level",
     "background", "alignment", "deity", "age", "height", "pronouns", "status", "stats", "quote", "bio", "traits", "goals", "extra", "art", "backgroundImage"];
 
   function cleanChar(c) {
@@ -412,6 +413,14 @@
         <label class="field full"><span>Card pattern</span>${chipRow("c.cardPattern", [["", "Site default"], ...D.PATTERNS], c.cardPattern || "")}</label>
         <label class="field full"><span>Pattern on their page</span>${chipRow("c.pagePattern", [["", "Site default"], ...D.PATTERNS], c.pagePattern || "")}</label>
       </div>
+      ${(() => {
+        const custom = ["artX", "artHeight", "artBottom"].some((k) => c[k] !== undefined && c[k] !== "");
+        const S = state.site.style;
+        const val = (k) => (c[k] !== undefined && c[k] !== "" ? c[k] : S[k]);
+        const r = (label, k, min, max, step) => `<label class="field"><span>${label}</span><span class="range"><input type="range" data-cart="${k}" min="${min}" max="${max}" step="${step}" value="${esc(val(k))}"><output data-out="c-${k}">${esc(val(k))}%</output></span></label>`;
+        return `<div style="margin-top:18px"><label class="toggle"><input type="checkbox" data-act-toggle="custom-art" ${custom ? "checked" : ""}> Custom art position on their page</label></div>
+          ${custom ? `<div class="grid" style="margin-top:12px">${r("Art: left ↔ right", "artX", 20, 95, 1)}${r("Art: size", "artHeight", 40, 150, 2)}${r("Art: raise ↑ / sink ↓", "artBottom", -50, 30, 1)}</div>` : ""}`;
+      })()}
       <div style="margin-top:16px"><label class="toggle"><input type="checkbox" data-c="hidden" data-type="bool" ${c.hidden ? "checked" : ""}> Hide this character from the site</label></div>
     </section>
 
@@ -578,6 +587,24 @@
         <label class="field full"><span>Page pattern</span>${chipRow("style.pagePattern", [["", "Same as cards"], ...D.PATTERNS], st.pagePattern || "")}</label>
       </div>
       <p class="hint" style="margin:12px 0 0">On phones the whole page scrolls normally.</p>
+    </section>
+
+    <section class="sec">
+      <h2>Character page layout</h2>
+      <p class="hint">Where the text and the art sit on a character page (computers and tablets; phones stack them). Values are percentages of the screen.</p>
+      <label class="field" style="margin-bottom:14px"><span>Show in the preview</span><select data-preview-char>
+        <option value="">Home page</option>${state.chars.map((c) => `<option value="${esc(c.id)}"${c.id === state.sitePreviewChar ? " selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+      <div class="grid">
+        ${range("Text: distance from left", "textLeft", 0, 50, 1, "%")}
+        ${range("Text: width", "textWidth", 20, 80, 1, "%")}
+        ${range("Text: space at the top", "textTop", 0, 30, 1, "%")}
+        <span></span>
+        ${range("Art: left ↔ right", "artX", 20, 95, 1, "%")}
+        ${range("Art: size", "artHeight", 40, 150, 2, "%")}
+        ${range("Art: raise ↑ / sink ↓", "artBottom", -50, 30, 1, "%")}
+      </div>
+      <div class="ed-actions" style="margin-top:14px"><button class="btn ghost small" data-act="reset-layout">Reset layout</button></div>
+      <p class="hint" style="margin:10px 0 0">Each character can also have their own art position (on their page in admin).</p>
     </section>
 
     <section class="sec">
@@ -770,6 +797,13 @@
       changed({ side: false });
       return;
     }
+    if (el.dataset.cart && c) {
+      c[el.dataset.cart] = Number(el.value);
+      const out = $(`[data-out="c-${el.dataset.cart}"]`); if (out) out.textContent = el.value + "%";
+      changed({ side: false });
+      return;
+    }
+    if (el.matches("[data-preview-char]")) { state.sitePreviewChar = el.value; sendPreview(); return; }
     if (el.dataset.folderName !== undefined) {
       const f = state.site.folders[Number(el.dataset.folderName)];
       if (f) { f.name = el.value; changed(); }
@@ -781,6 +815,10 @@
       const v = readValue(el);
       if (el.closest(".color-input")) { syncColorPair(el, v); if (!validColor(v)) return; }
       state.site.style[key] = v;
+      if (/^(text|art)/.test(key) && !state.sitePreviewChar && state.chars[0]) {
+        state.sitePreviewChar = state.chars[0].id;
+        const sel = $("[data-preview-char]"); if (sel) sel.value = state.sitePreviewChar;
+      }
       const out = $(`[data-out="${key}"]`);
       if (out) out.textContent = v + (out.dataset.unit || "");
       if (key === "headingFont" || key === "bodyFont") {
@@ -795,6 +833,13 @@
     if (el.matches('select[data-st], input[type=checkbox][data-st]')) {
       state.site.style[el.dataset.st] = readValue(el);
       changed({ side: false });
+    }
+    if (el.matches('[data-act-toggle="custom-art"]') && cur()) {
+      const c = cur(), S = state.site.style;
+      if (el.checked) ["artX", "artHeight", "artBottom"].forEach((k) => { c[k] = Number(S[k]); });
+      else ["artX", "artHeight", "artBottom"].forEach((k) => { delete c[k]; });
+      renderEditor(); changed({ side: false });
+      return;
     }
     if (el.matches('input[type=checkbox][data-c]') && cur()) {
       cur()[el.dataset.c] = readValue(el);
@@ -882,6 +927,10 @@
         $$("[data-kv-k]").pop().focus();
         break;
       }
+      case "reset-layout":
+        ["textLeft", "textWidth", "textTop", "artX", "artHeight", "artBottom"].forEach((k) => { state.site.style[k] = D.DEFAULT_SITE.style[k]; });
+        renderEditor(); changed({ side: false });
+        break;
       case "glow-color-reset":
         delete c.glowColor;
         renderEditor(); changed({ side: false });
@@ -1048,7 +1097,8 @@
   });
   function sendPreview() {
     if (!state.previewReady || !state.site || !frame.contentWindow) return;
-    const show = state.view.type === "char" && state.chars[state.view.i] ? state.chars[state.view.i].id : "";
+    const show = state.view.type === "char" && state.chars[state.view.i] ? state.chars[state.view.i].id
+      : state.view.type === "site" && state.chars.some((c) => c.id === state.sitePreviewChar) ? state.sitePreviewChar : "";
     frame.contentWindow.postMessage({
       type: "dnd-preview",
       site: clone(state.site),

@@ -240,8 +240,9 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
   display: flex; align-items: flex-end; justify-content: center;
   padding-top: 60px; pointer-events: none;
 }
-.figure-holder > * { position: relative; }
-.figure-holder img { max-height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: bottom; filter: var(--fx-page, drop-shadow(0 18px 30px rgba(0,0,0,.25))); transform-origin: 50% 100%; }
+.art-pos { position: relative; display: flex; align-items: flex-end; justify-content: center; height: 100%; max-width: 100%; }
+.art-pos > * { transform-origin: 50% 100%; }
+.figure-holder img { max-height: 100%; width: auto; max-width: 100%; object-fit: contain; object-position: bottom; filter: var(--fx-page, drop-shadow(0 18px 30px rgba(0,0,0,.25))); }
 .figure-holder .ph { position: static; inset: auto; height: 100%; font-size: clamp(160px, 20vw, 300px); padding-bottom: 12vh; }
 .figure-holder .ph small { font-size: 14px; }
 
@@ -349,9 +350,9 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
 .detail.is-open .detail-bg { animation: bg-in .55s var(--ease) both; }
 .detail.is-open .d-head > *, .detail.is-open .d-body > * { animation: slide-in .6s var(--ease) both; animation-delay: calc(min(var(--d, 0), 8) * 55ms + 120ms); }
 .detail.is-open .detail-word { animation: word-in 1s .2s var(--ease) both; }
-.detail.is-open .figure-holder > * { animation: char-in .9s .55s var(--spring) both; }
+.detail.is-open .art-pos > * { animation: char-in .9s .55s var(--spring) both; }
 .detail.is-open .close-btn, .detail.is-open .detail-nav { animation: fade-in .4s .5s both; }
-.detail.is-swapping .d-head > *, .detail.is-swapping .d-body > *, .detail.is-swapping .figure-holder > *, .detail.is-swapping .detail-word { animation: swap-out .25s ease-in both; }
+.detail.is-swapping .d-head > *, .detail.is-swapping .d-body > *, .detail.is-swapping .art-pos > *, .detail.is-swapping .detail-word { animation: swap-out .25s ease-in both; }
 
 @keyframes pop-up { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: none; } }
 @keyframes bg-in { from { clip-path: circle(0% at var(--ox, 50%) var(--oy, 50%)); } to { clip-path: circle(150% at var(--ox, 50%) var(--oy, 50%)); } }
@@ -364,6 +365,26 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
 }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes swap-out { to { opacity: 0; transform: translateY(14px); } }
+
+/* ---------- Free layout on larger screens: text and art placed by admin settings ----------
+   --tx-left / --tx-width: % of screen width · --tx-top: % of screen height
+   --art-x: centre of the art across the screen · --art-h: art height · --art-bottom: lift (+) or sink (−) */
+@media (min-width: 901px) {
+  .detail-grid, .detail.pos-beside .detail-grid { display: block; position: relative; max-width: none; padding: 0; min-height: 100%; }
+  .detail-text, .detail.pos-beside .detail-text {
+    margin-left: var(--tx-left, 6%); width: var(--tx-width, 38%); max-width: none;
+    padding-top: calc(var(--tx-top, 8) * 1vh / var(--zoom, 1));
+  }
+  .detail.is-locked .detail-text { padding-top: calc(var(--tx-top, 8) * 1vh / var(--zoom, 1)); }
+  .detail-figure { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .figure-holder { display: block; padding: 0; }
+  .art-pos {
+    position: absolute; left: var(--art-x, 72%); bottom: var(--art-bottom, 0%); height: var(--art-h, 96%);
+    max-width: none; transform: translateX(-50%);
+  }
+  .art-pos img { height: 100%; max-height: none; max-width: none; }
+  .art-pos .ph { width: 30vw; padding-bottom: 6vh; }
+}
 
 /* ---------- Tablet & phone ---------- */
 @media (max-width: 900px) {

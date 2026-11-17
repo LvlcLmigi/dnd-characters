@@ -153,6 +153,16 @@
     const body = pos === "below" ? descHTML + panelHTML : panelHTML + descHTML;
     return `<div class="d-head">${head.join("")}</div>` + (body ? `<div class="d-body pos-${pos}">${body}</div>` : "");
   }
+  // where the text and art sit on a character page (admin: Site & style → Character page layout)
+  function layoutVars(c) {
+    const n = (v, d, lo, hi) => { const x = Number(v); return Math.max(lo, Math.min(hi, isNaN(x) || v === "" || v === null || v === undefined ? d : x)); };
+    const S = st();
+    const pick = (k) => (c[k] !== undefined && c[k] !== "" ? c[k] : S[k]);
+    return [
+      `--tx-left:${n(S.textLeft, 6, 0, 60)}%`, `--tx-width:${n(S.textWidth, 38, 20, 90)}%`, `--tx-top:${n(S.textTop, 8, 0, 40)}`,
+      `--art-x:${n(pick("artX"), 72, 0, 100)}%`, `--art-h:${n(pick("artHeight"), 96, 30, 160)}%`, `--art-bottom:${n(pick("artBottom"), 0, -60, 40)}%`,
+    ].join(";");
+  }
   const detailsPos = () => (["above", "below", "beside"].includes(st().detailsPosition) ? st().detailsPosition : "above");
 
   /* ---------- open / switch / close ---------- */
@@ -160,7 +170,7 @@
   let current = null, swapTimer = null;
 
   function fill(c) {
-    detail.setAttribute("style", colorVars(c) + (st().effectsOnPage !== false ? `;--fx-page:${D.artFilter(st(), c, 2.6)}` : ""));
+    detail.setAttribute("style", colorVars(c) + (st().effectsOnPage !== false ? `;--fx-page:${D.artFilter(st(), c, 2.6)}` : "") + ";" + layoutVars(c));
     detail.dataset.pattern = pagePattern(c);
     detail.classList.toggle("is-locked", st().lockHeader !== false);
     ["above", "below", "beside"].forEach((p) => detail.classList.toggle("pos-" + p, detailsPos() === p));
@@ -172,7 +182,7 @@
     const text = $("#detail-text");
     text.innerHTML = detailHTML(c);
     $$(".d-head > *, .d-body > *", text).forEach((el, n) => el.style.setProperty("--d", n));
-    $("#figure").innerHTML = art(c, "detail");
+    $("#figure").innerHTML = `<div class="art-pos">${art(c, "detail")}</div>`;
     $("#detail-scroll").scrollTop = 0;
 
     const list = navList.includes(c) ? navList : chars;

@@ -13,7 +13,7 @@ From there you can:
 - sort characters into folders (shown on the site as tabs or as sections)
 - change the site's titles, colours, fonts, zoom, card size, card corners, patterns and background images
 - add a drop shadow and a glow or outline that follow the shape of the character art (on cards and their page)
-- choose the character page layout: name and details locked in place with only the story scrolling, and the details box above, below or beside the story
+- choose the character page layout: name and details locked in place with only the story scrolling, the details box above, below or beside the story, plus where the text and art sit on screen (with per-character art position)
 - override the card pattern, page pattern, shadow and glow per character
 - see every change in the live preview before anyone else does
 

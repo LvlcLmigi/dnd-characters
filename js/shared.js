@@ -48,6 +48,9 @@
       lockHeader: true,                // name + details stay put, only the description scrolls
       detailsPosition: "above",        // above | below | beside
       pagePattern: "",                 // "" = same as cards
+      // character page layout on larger screens (percentages of the screen)
+      textLeft: 6, textWidth: 38, textTop: 8,
+      artX: 72, artHeight: 96, artBottom: 0,
     },
   };
 
