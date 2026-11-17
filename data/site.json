@@ -1,9 +1,9 @@
 {
   "title": "Lmigi's Lineup",
   "subtitle": "Took me a long time to come up with lmigi's lineup",
-  "intro": "All my characters, all in one place. *winks* ",
-  "heroTitle": "Lineup",
-  "browseHeading": "Inside the fucked up mind of Lmigi LmBruttus",
+  "intro": "",
+  "heroTitle": "My characters",
+  "browseHeading": "Inside the fucked up mind of Lmigi LmBrutto.",
   "style": {
     "accent": "#1a5cff",
     "text": "#141a2b",
@@ -11,10 +11,10 @@
     "browseBg": "#e8f1ff",
     "headingFont": "Rubik",
     "bodyFont": "Rubik",
-    "zoom": 100,
-    "cardSize": 240,
-    "cardRadius": 28,
-    "pattern": "dots",
+    "zoom": 85,
+    "cardSize": 260,
+    "cardRadius": 32,
+    "pattern": "stripes",
     "showDie": true,
     "heroImage": "",
     "browseImage": ""
