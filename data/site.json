@@ -1,0 +1,22 @@
+{
+  "title": "The Party",
+  "subtitle": "A campaign in progress",
+  "intro": "Heroes, rogues and at least one menace. Pick a character to learn who they are.",
+  "heroTitle": "Characters",
+  "browseHeading": "Meet the party",
+  "style": {
+    "accent": "#1a5cff",
+    "text": "#141a2b",
+    "pageBg": "#ffffff",
+    "browseBg": "#e8f1ff",
+    "headingFont": "Rubik",
+    "bodyFont": "Rubik",
+    "zoom": 100,
+    "cardSize": 240,
+    "cardRadius": 28,
+    "pattern": "dots",
+    "showDie": true,
+    "heroImage": "",
+    "browseImage": ""
+  }
+}

@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------
    Characters — stylesheet
-   Site colours and type are set here. Each character's own
-   colour comes from js/characters.js.
+   Defaults live here. Admin mode (admin.html) overrides colours,
+   fonts, zoom and card style through data/site.json.
    ------------------------------------------------------------ */
 :root {
   --brand: #1a5cff;          /* site accent: buttons, header details */
@@ -10,10 +10,16 @@
   --ink-2: #4b5470;
   --sky: #e8f1ff;            /* browse section background */
   --white: #ffffff;
+  --page: #ffffff;           /* page background */
+  --card-size: 240px;        /* card width */
+  --card-radius: 28px;
+  --hero-image: none;
+  --browse-image: none;
   --c: #1a5cff;              /* current character colour (set by app.js) */
   --on-c: #ffffff;           /* text colour on top of it (set by app.js) */
 
   --font: "Rubik", "Arial Rounded MT Bold", "Helvetica Neue", Arial, sans-serif;
+  --font-head: var(--font);
   --spring: cubic-bezier(.34, 1.56, .64, 1);
   --ease: cubic-bezier(.22, 1, .36, 1);
   --gutter: clamp(16px, 4vw, 48px);
@@ -22,7 +28,7 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0; background: var(--white); color: var(--ink);
+  margin: 0; background: var(--page); color: var(--ink);
   font-family: var(--font); font-size: 17px; line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
@@ -37,9 +43,9 @@ button { font: inherit; color: inherit; }
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; justify-content: space-between;
   height: 68px; padding: 0 var(--gutter);
-  background: var(--white); border-bottom: 1px solid #e3e8f2;
+  background: var(--page); border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
-.logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -.01em; }
+.logo { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-head); font-weight: 800; font-size: 20px; letter-spacing: -.01em; }
 .logo-die { width: 32px; height: 32px; color: var(--brand); transition: transform .6s var(--spring); }
 .logo:hover .logo-die { transform: rotate(72deg); }
 .topnav { display: flex; gap: 6px; }
@@ -51,10 +57,12 @@ button { font: inherit; color: inherit; }
   position: relative; overflow: hidden;
   padding: clamp(48px, 8vw, 104px) var(--gutter) clamp(56px, 8vw, 110px);
   display: flex; align-items: center;
+  background-image: var(--hero-image); background-size: cover; background-position: center;
 }
+.hero.has-image .hero-art { display: none; }
 .hero-inner { position: relative; z-index: 1; max-width: 640px; }
 .hero-title {
-  margin: 0; font-weight: 900; letter-spacing: -.035em; line-height: .9;
+  margin: 0; font-family: var(--font-head); font-weight: 900; letter-spacing: -.035em; line-height: .9;
   font-size: clamp(64px, 12vw, 148px); color: var(--ink);
   animation: pop-up .8s var(--spring) both;
 }
@@ -72,7 +80,7 @@ button { font: inherit; color: inherit; }
 .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--brand-dark); }
 .hero-art {
   position: absolute; right: clamp(-120px, -4vw, 0px); top: 50%;
-  width: clamp(280px, 38vw, 520px); height: auto; color: #dce7fb;
+  width: clamp(280px, 38vw, 520px); height: auto; color: color-mix(in srgb, var(--brand) 16%, var(--page));
   transform: translateY(-50%) rotate(14deg);
   animation: die-in 1.1s .1s var(--spring) both;
 }
@@ -80,15 +88,16 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Browse ---------- */
 .browse {
-  background: var(--sky);
+  background-color: var(--sky);
+  background-image: var(--browse-image); background-size: cover; background-position: center; background-attachment: fixed;
   padding: clamp(48px, 7vw, 88px) var(--gutter) clamp(72px, 9vw, 120px);
   border-radius: clamp(28px, 4vw, 56px) clamp(28px, 4vw, 56px) 0 0;
   scroll-margin-top: 68px;
 }
-.browse-heading { margin: 0 0 clamp(48px, 6vw, 72px); font-weight: 900; font-size: clamp(32px, 4vw, 48px); letter-spacing: -.02em; text-align: center; }
+.browse-heading { margin: 0 0 clamp(48px, 6vw, 72px); font-family: var(--font-head); font-weight: 900; font-size: clamp(32px, 4vw, 48px); letter-spacing: -.02em; text-align: center; }
 .cards {
   list-style: none; margin: 0 auto; padding: 0; max-width: 1240px;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 260px)); justify-content: center;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(var(--card-size), 42vw), var(--card-size))); justify-content: center;
   gap: clamp(56px, 6vw, 80px) clamp(18px, 2.4vw, 32px);
 }
 .cards > li { animation: pop-up .7s var(--spring) both; animation-delay: calc(var(--i) * 70ms + 150ms); }
@@ -96,7 +105,7 @@ button { font: inherit; color: inherit; }
 .card { display: block; text-align: center; outline: none; }
 .card-box {
   position: relative; display: block; aspect-ratio: 1 / 1;
-  border-radius: 28px; background: var(--c);
+  border-radius: var(--card-radius); background: var(--c);
   box-shadow: 0 6px 0 color-mix(in srgb, var(--c) 70%, #000);
   transition: transform .4s var(--spring), box-shadow .4s var(--spring);
 }
@@ -106,15 +115,24 @@ button { font: inherit; color: inherit; }
   background-image: radial-gradient(color-mix(in srgb, var(--on-c) 18%, transparent) 2.2px, transparent 2.6px);
   background-size: 22px 22px;
 }
+[data-pattern="grid"] .card-box::before, [data-pattern="grid"] .detail-bg {
+  background-image: linear-gradient(color-mix(in srgb, var(--on-c) 12%, transparent) 2px, transparent 2px), linear-gradient(90deg, color-mix(in srgb, var(--on-c) 12%, transparent) 2px, transparent 2px);
+  background-size: 26px 26px;
+}
+[data-pattern="stripes"] .card-box::before, [data-pattern="stripes"] .detail-bg {
+  background-image: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--on-c) 11%, transparent) 0 10px, transparent 10px 24px);
+  background-size: auto;
+}
+[data-pattern="none"] .card-box::before, [data-pattern="none"] .detail-bg { background-image: none; }
 .card-figure {
   position: absolute; left: 0; right: 0; bottom: 0; top: -22%;
   display: flex; justify-content: center; align-items: flex-end;
-  clip-path: inset(-60% 0 0 0 round 0 0 28px 28px);   /* clipped at sides & bottom, free at the top */
+  clip-path: inset(-60% 0 0 0 round 0 0 var(--card-radius) var(--card-radius));   /* clipped at sides & bottom, free at the top */
   transform-origin: 50% 100%;
   transition: transform .45s var(--spring);
 }
 .card-figure img { height: 100%; width: auto; max-width: none; object-fit: contain; object-position: bottom; }
-.card-name { display: block; margin-top: 22px; font-weight: 800; font-size: 22px; line-height: 1.15; letter-spacing: -.01em; transition: color .2s; }
+.card-name { display: block; margin-top: 22px; font-family: var(--font-head); font-weight: 800; font-size: 22px; line-height: 1.15; letter-spacing: -.01em; transition: color .2s; }
 .card-sub { display: block; margin-top: 4px; font-size: 14px; color: var(--ink-2); }
 
 .card:hover .card-box, .card:focus-visible .card-box { transform: translateY(-8px); box-shadow: 0 14px 0 color-mix(in srgb, var(--c) 70%, #000); }
@@ -133,12 +151,14 @@ button { font: inherit; color: inherit; }
 /* stand-in until artwork is added */
 .ph {
   position: absolute; inset: 22% 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: var(--on-c); font-weight: 900; letter-spacing: -.04em; line-height: 1;
+  color: var(--on-c); font-family: var(--font-head); font-weight: 900; letter-spacing: -.04em; line-height: 1;
   font-size: clamp(64px, 7vw, 96px);
 }
 .ph small { margin-top: 10px; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
 
 /* ---------- Footer ---------- */
+.footer a { color: inherit; opacity: .7; }
+.footer a:hover { opacity: 1; text-decoration: underline; }
 .footer {
   display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   padding: 28px var(--gutter); background: var(--ink); color: #aab3cc; font-size: 14px; font-weight: 500;
@@ -221,7 +241,7 @@ button { font: inherit; color: inherit; }
 
 /* text */
 .d-player { display: inline-block; margin: 0 0 18px; padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: color-mix(in srgb, var(--on-c) 16%, transparent); }
-.d-name { margin: 0; font-weight: 900; font-size: clamp(44px, 7vw, 108px); overflow-wrap: anywhere; hyphens: auto; line-height: .9; letter-spacing: -.04em; }
+.d-name { margin: 0; font-family: var(--font-head); font-weight: 900; font-size: clamp(44px, 7vw, 108px); overflow-wrap: anywhere; hyphens: auto; line-height: .9; letter-spacing: -.04em; }
 .d-epithet { margin: 14px 0 0; font-size: clamp(20px, 2vw, 26px); font-weight: 500; opacity: .9; }
 .d-chips { list-style: none; margin: 24px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .d-chips li { padding: 8px 16px; border-radius: 999px; background: var(--white); color: color-mix(in srgb, var(--c) 75%, #000); font-weight: 700; font-size: 15px; }
@@ -284,7 +304,6 @@ button { font: inherit; color: inherit; }
 @media (max-width: 600px) {
   .hero-art { opacity: .55; right: -110px; }
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 52px 14px; }
-  .card-box { border-radius: 22px; }
   .card-name { font-size: 18px; margin-top: 16px; }
   .card-sub { font-size: 13px; }
   .ph { font-size: 54px; }
@@ -299,3 +318,8 @@ button { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Preview inside admin mode ---------- */
+.preview-badge { position: fixed; z-index: 60; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; pointer-events: none; }
+.card.is-hidden .card-box { opacity: .45; }
+.card.is-hidden .card-name::after { content: " (hidden)"; font-weight: 500; color: var(--ink-2); }

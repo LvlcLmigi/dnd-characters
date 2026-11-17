@@ -1,10 +1,13 @@
 /* ------------------------------------------------------------
    Characters — page logic.
-   Characters are edited in js/characters.js, not here.
+   Content comes from data/site.json and data/characters.json,
+   which admin mode (admin.html) edits. In admin's live preview
+   (index.html?preview) the data arrives by postMessage instead.
    ------------------------------------------------------------ */
 (function () {
   "use strict";
 
+  const D = window.DND;
   const $ = (s) => document.querySelector(s);
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const has = (v) => v !== undefined && v !== null && String(v).trim() !== "";
@@ -12,44 +15,45 @@
   const initials = (n) => String(n || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("");
   const firstName = (n) => String(n || "").split(/\s+/)[0];
 
-  const camp = typeof CAMPAIGN !== "undefined" ? CAMPAIGN : {};
-  const chars = (typeof CHARACTERS !== "undefined" ? CHARACTERS : []).map((c, i) => ({ ...c, _id: toSlug(c, i), _n: i }));
-  const FALLBACK = ["#d8274d", "#e0611a", "#1fa463", "#1a5cff", "#8e3fd6", "#e64fa0", "#12a5b8", "#e8b41b"];
-  const colorOf = (c) => c.color || c.tone || FALLBACK[c._n % FALLBACK.length];
+  const PREVIEW = new URLSearchParams(location.search).has("preview");
+  let site = D.mergeSite({});
+  let chars = [];
+  let resolve = (p) => p;          // maps image paths to URLs (admin preview swaps in unpublished images)
+  let siteTitle = "Characters";
 
-  // white text on dark colours, dark text on light ones
-  function inkFor(hex) {
-    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
-    if (!m) return "#ffffff";
-    const n = parseInt(m[1], 16), lin = (v) => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
-    const L = .2126 * lin(n >> 16) + .7152 * lin((n >> 8) & 255) + .0722 * lin(n & 255);
-    return L > .4 ? "#141a2b" : "#ffffff";
-  }
-  const colorVars = (c) => `--c:${esc(colorOf(c))};--on-c:${inkFor(colorOf(c))}`;
+  const colorOf = (c) => c.color || c.tone || D.PALETTE[c._n % D.PALETTE.length];
+  const colorVars = (c) => `--c:${esc(colorOf(c))};--on-c:${D.inkFor(colorOf(c))}`;
+  const imgOf = (c, key) => c[key] || (key === "backgroundImage" ? c.background_image : "") || "";
 
-  /* ---------- page chrome ---------- */
-  const siteTitle = camp.title || "Characters";
-  $("#logo-text").textContent = siteTitle;
-  $("#footer-title").textContent = siteTitle + (camp.subtitle ? " · " + camp.subtitle : "");
-  $("#intro").textContent = camp.intro || camp.subtitle || "";
-  $("#browse-btn").addEventListener("click", (e) => { e.preventDefault(); $("#browse").scrollIntoView({ behavior: "smooth" }); });
-
-  /* ---------- character cards ---------- */
+  /* ---------- rendering ---------- */
   function subline(c) { return [c.race, c.class].filter(has).join(" · "); }
   function art(c, where) {
-    if (c.art) return `<img src="${esc(c.art)}" alt="${where === "detail" ? esc(c.name) : ""}" ${where === "card" ? 'loading="lazy"' : ""}>`;
+    if (c.art) return `<img src="${esc(resolve(c.art))}" alt="${where === "detail" ? esc(c.name) : ""}" ${where === "card" ? 'loading="lazy"' : ""}>`;
     return `<div class="ph" aria-hidden="true">${esc(initials(c.name))}<small>Art coming soon</small></div>`;
   }
-  $("#cards").innerHTML = chars.map((c, i) => `
-    <li style="--i:${i}">
-      <a class="card" href="#${esc(c._id)}" style="${colorVars(c)}">
-        <span class="card-box"><span class="card-figure">${art(c, "card")}</span></span>
-        <span class="card-name">${esc(c.name)}</span>
-        <span class="card-sub">${esc(subline(c))}</span>
-      </a>
-    </li>`).join("");
 
-  /* ---------- detail content ---------- */
+  function renderChrome() {
+    siteTitle = site.title || "Characters";
+    $("#logo-text").textContent = siteTitle;
+    $("#footer-title").textContent = siteTitle + (site.subtitle ? " · " + site.subtitle : "");
+    $("#intro").textContent = site.intro || site.subtitle || "";
+    $("#hero-title").textContent = site.heroTitle || "Characters";
+    $("#browse-heading").textContent = site.browseHeading || "Meet the party";
+    D.applyStyle(site, document, resolve);
+    if (!current) document.title = siteTitle;
+  }
+
+  function renderCards() {
+    $("#cards").innerHTML = chars.map((c, i) => `
+      <li style="--i:${i}">
+        <a class="card${c.hidden ? " is-hidden" : ""}" href="#${esc(c._id)}" style="${colorVars(c)}">
+          <span class="card-box"><span class="card-figure">${art(c, "card")}</span></span>
+          <span class="card-name">${esc(c.name)}</span>
+          <span class="card-sub">${esc(subline(c))}</span>
+        </a>
+      </li>`).join("");
+  }
+
   const mod = (n) => { const m = Math.floor((Number(n) - 10) / 2); return (m >= 0 ? "+" : "−") + Math.abs(m); };
 
   function detailHTML(c) {
@@ -63,7 +67,7 @@
     if (has(c.quote)) o.push(`<p class="d-quote">“${esc(c.quote)}”</p>`);
 
     const bio = Array.isArray(c.bio) ? c.bio : has(c.bio) ? [c.bio] : [];
-    if (bio.length) o.push(`<div class="d-bio">${bio.map((p) => `<p>${esc(p)}</p>`).join("")}</div>`);
+    if (bio.filter(has).length) o.push(`<div class="d-bio">${bio.filter(has).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`);
 
     const facts = [
       ["Race", c.race], ["Subrace", c.subrace],
@@ -74,16 +78,18 @@
       ["Height", c.height], ["Pronouns", c.pronouns],
       ["Status", c.status],
       ...Object.entries(c.extra || {}),
-    ].filter(([, v]) => has(v));
+    ].filter(([k, v]) => has(k) && has(v));
 
     const panel = [];
     if (facts.length) panel.push(`<h3>Details</h3><dl class="facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`);
-    if (c.stats && Object.keys(c.stats).length) {
-      const top = Math.max(...Object.values(c.stats).map(Number));
-      panel.push(`<h3>Ability scores</h3><ul class="stats">${Object.entries(c.stats).map(([k, v]) =>
+    const stats = Object.entries(c.stats || {}).filter(([, v]) => has(v));
+    if (stats.length) {
+      const top = Math.max(...stats.map(([, v]) => Number(v)));
+      panel.push(`<h3>Ability scores</h3><ul class="stats">${stats.map(([k, v]) =>
         `<li${Number(v) === top ? ' class="is-high"' : ""}><span class="ab">${esc(k)}</span><span class="score">${esc(v)}</span><span class="mod">${mod(v)}</span></li>`).join("")}</ul>`);
     }
-    if (c.traits && c.traits.length) panel.push(`<h3>Quirks</h3><ul class="traits">${c.traits.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`);
+    const traits = (c.traits || []).filter(has);
+    if (traits.length) panel.push(`<h3>Quirks</h3><ul class="traits">${traits.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`);
     if (has(c.goals)) panel.push(`<h3>Goals</h3><p>${esc(c.goals)}</p>`);
     if (panel.length) o.push(`<div class="panel">${panel.join("")}</div>`);
     return o.join("");
@@ -91,13 +97,14 @@
 
   /* ---------- open / switch / close ---------- */
   const detail = $("#detail");
-  let current = null, lastCard = null, swapTimer = null;
+  let current = null, swapTimer = null;
 
   function fill(c) {
     detail.setAttribute("style", colorVars(c));
     const scene = $("#detail-scene");
-    scene.style.backgroundImage = c.background_image ? `url('${c.background_image}')` : "none";
-    scene.classList.toggle("has-img", !!c.background_image);
+    const bg = imgOf(c, "backgroundImage");
+    scene.style.backgroundImage = bg ? `url("${resolve(bg)}")` : "none";
+    scene.classList.toggle("has-img", !!bg);
     $("#detail-word").textContent = firstName(c.name);
     const text = $("#detail-text");
     text.innerHTML = detailHTML(c);
@@ -119,14 +126,17 @@
     detail.classList.add("is-open");
   }
 
-  function open(c) {
+  function open(c, quiet) {
     clearTimeout(swapTimer);
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (current && current !== c && !detail.hidden && !reduced) {
+    if (quiet && current && !detail.hidden) {          // live preview edit: refresh in place
+      const y = $("#detail-scroll").scrollTop;
+      fill(c); $("#detail-scroll").scrollTop = y;
+      detail.classList.add("is-open");
+    } else if (current && current !== c && !detail.hidden && !reduced) {
       detail.classList.add("is-swapping");
       swapTimer = setTimeout(() => { fill(c); replay(); }, 240);
     } else {
-      // grow the colour out from the card that was clicked
       const card = document.querySelector(`.card[href="#${CSS.escape(c._id)}"] .card-box`);
       fill(c);
       if (card) {
@@ -137,7 +147,7 @@
       detail.hidden = false;
       document.body.classList.add("is-locked");
       replay();
-      $("#close-btn").focus({ preventScroll: true });
+      if (!PREVIEW) $("#close-btn").focus({ preventScroll: true });
     }
     current = c;
   }
@@ -148,25 +158,39 @@
     document.body.classList.remove("is-locked");
     document.title = siteTitle;
     if (current) {
-      lastCard = document.querySelector(`.card[href="#${CSS.escape(current._id)}"]`);
-      if (lastCard) lastCard.focus({ preventScroll: false });
+      const card = document.querySelector(`.card[href="#${CSS.escape(current._id)}"]`);
+      if (card && !PREVIEW) card.focus({ preventScroll: false });
     }
     current = null;
   }
 
-  function route() {
+  function route(quiet) {
     const id = decodeURIComponent(location.hash.slice(1));
     const c = chars.find((x) => x._id === id);
-    if (c) open(c);
+    if (c) open(c, quiet === true);
     else if (!detail.hidden) close();
   }
 
   function goHome() {
-    // clear the hash without jumping the page
     history.pushState("", document.title, location.pathname + location.search);
     route();
   }
 
+  function setData(newSite, newChars, opts) {
+    site = D.mergeSite(newSite);
+    chars = (newChars || [])
+      .filter((c) => c && (PREVIEW || !c.hidden))
+      .map((c, i) => ({ ...c, _id: toSlug(c, i), _n: i }));
+    renderChrome();
+    renderCards();
+    if (current) {
+      const again = chars.find((x) => x._id === current._id);
+      if (again) { current = again; open(again, true); return; }
+    }
+    route(opts && opts.quiet);
+  }
+
+  /* ---------- events ---------- */
   $("#close-btn").addEventListener("click", goHome);
   document.addEventListener("keydown", (e) => {
     if (detail.hidden) return;
@@ -176,10 +200,37 @@
   });
   $("#logo").addEventListener("click", (e) => { e.preventDefault(); goHome(); window.scrollTo({ top: 0, behavior: "smooth" }); });
   document.querySelector(".topnav a").addEventListener("click", (e) => { e.preventDefault(); goHome(); $("#browse").scrollIntoView({ behavior: "smooth" }); });
+  $("#browse-btn").addEventListener("click", (e) => { e.preventDefault(); $("#browse").scrollIntoView({ behavior: "smooth" }); });
+  window.addEventListener("hashchange", () => route());
+  window.addEventListener("popstate", () => route());
 
-  window.addEventListener("hashchange", route);
-  window.addEventListener("popstate", route);
-  route();
-
-  chars.forEach((c) => [c.art, c.background_image].filter(Boolean).forEach((src) => { new Image().src = src; }));
+  /* ---------- load ---------- */
+  if (PREVIEW) {
+    // Admin mode drives this copy of the page.
+    const badge = document.createElement("div");
+    badge.className = "preview-badge"; badge.textContent = "Preview · not published";
+    document.body.appendChild(badge);
+    const map = new Map();
+    resolve = (p) => map.get(p) || p;
+    window.addEventListener("message", (e) => {
+      if (e.origin !== location.origin || !e.data || e.data.type !== "dnd-preview") return;
+      map.clear();
+      Object.entries(e.data.images || {}).forEach(([k, v]) => map.set(k, v));
+      setData(e.data.site, e.data.characters, { quiet: true });
+      if (e.data.show !== undefined) {
+        const want = e.data.show ? "#" + e.data.show : "";
+        if (location.hash !== want) {
+          if (want) location.hash = want; else goHome();
+        }
+      }
+    });
+    window.parent.postMessage({ type: "dnd-preview-ready" }, location.origin);
+  } else {
+    const get = (p) => fetch(p, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    Promise.all([get("data/site.json"), get("data/characters.json")]).then(([s, c]) => {
+      setData(s || {}, Array.isArray(c) ? c : []);
+      const preload = (c || []).flatMap((x) => [x.art, x.backgroundImage]).filter(Boolean);
+      preload.forEach((src) => { new Image().src = src; });
+    });
+  }
 })();

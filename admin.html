@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin · Characters</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+  <!-- Sign in -->
+  <section class="signin" id="signin" hidden>
+    <div class="signin-card">
+      <a class="back" href="./">← Back to the site</a>
+      <h1>Admin mode</h1>
+      <p class="lead">Admin mode saves your changes straight to the site's GitHub repo, so it needs a GitHub access key. You only set this up once per device.</p>
+
+      <ol class="steps">
+        <li>
+          <a class="btn primary" id="token-link" target="_blank" rel="noopener">Create a key on GitHub ↗</a>
+        </li>
+        <li>On that page, set:
+          <ul>
+            <li><b>Repository access:</b> Only select repositories → <code id="repo-name-hint">dnd-characters</code></li>
+            <li><b>Permissions → Repository permissions → Contents:</b> Read and write</li>
+            <li><b>Expiration:</b> your choice (a year is sensible)</li>
+          </ul>
+          Then click <b>Generate token</b>.
+        </li>
+        <li>Copy the key (it starts with <code>github_pat_</code>) and paste it here:</li>
+      </ol>
+
+      <form id="signin-form" autocomplete="off">
+        <label class="field">
+          <span>GitHub access key</span>
+          <input type="password" id="token-input" placeholder="github_pat_…" spellcheck="false" required>
+        </label>
+        <label class="check"><input type="checkbox" id="remember" checked> Remember on this device</label>
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <label class="field"><span>Repository</span><input type="text" id="repo-input" spellcheck="false"></label>
+        </details>
+        <button class="btn primary big" type="submit" id="signin-btn">Unlock admin</button>
+        <p class="error" id="signin-error" hidden></p>
+      </form>
+      <p class="fineprint">The key is stored only in this browser. Anyone who has it can edit the site, so don't share it. You can delete it any time in GitHub → Settings → Developer settings → Personal access tokens.</p>
+    </div>
+  </section>
+
+  <!-- Loading -->
+  <div class="loading" id="loading"><div class="spinner"></div><p>Loading…</p></div>
+
+  <!-- App -->
+  <div class="app" id="app" hidden>
+    <header class="bar">
+      <div class="bar-left">
+        <a href="./" class="bar-link" target="_blank" rel="noopener">View site ↗</a>
+        <span class="bar-title">Admin</span>
+      </div>
+      <div class="bar-right">
+        <span class="status" id="status"></span>
+        <button class="btn ghost" id="btn-discard" hidden>Discard</button>
+        <button class="btn ghost only-narrow" id="btn-preview">Preview</button>
+        <button class="btn primary" id="btn-publish" disabled>Publish</button>
+        <button class="icon-btn" id="btn-signout" title="Sign out of admin on this device" aria-label="Sign out">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="side">
+        <button class="nav-item" data-view="site" id="nav-site">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.6 0-.9-.6-1.3-.6-2.1 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="11" r="1.4" fill="currentColor"/><circle cx="10" cy="7" r="1.4" fill="currentColor"/><circle cx="15" cy="7" r="1.4" fill="currentColor"/></svg>
+          Site &amp; style
+        </button>
+        <div class="side-head">
+          <span>Characters</span>
+          <button class="mini-btn" id="btn-new">+ New</button>
+        </div>
+        <ul class="char-list" id="char-list"></ul>
+        <button class="nav-item import" data-view="import" id="nav-import">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Import from D&amp;D Beyond
+        </button>
+      </aside>
+
+      <main class="editor" id="editor"></main>
+
+      <section class="preview" id="preview-pane">
+        <div class="preview-bar">
+          <span>Live preview</span>
+          <div class="seg" id="device-seg">
+            <button data-device="desktop" class="on">Desktop</button>
+            <button data-device="phone">Phone</button>
+          </div>
+          <button class="icon-btn only-narrow" id="btn-preview-close" aria-label="Close preview">✕</button>
+        </div>
+        <div class="preview-frame" id="preview-frame">
+          <iframe id="preview" title="Live preview of the site" src="index.html?preview"></iframe>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/shared.js"></script>
+  <script src="js/ddb-import.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
