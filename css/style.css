@@ -139,7 +139,7 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
 }
 /* ---------- Patterns (on cards and character pages) ----------
    Each element with data-pattern defines --pat / --pat-size using its own --on-c colour. */
-.card[data-pattern], .detail[data-pattern] { --pat: none; --pat-size: auto; --pk: color-mix(in srgb, var(--on-c) 16%, transparent); --pk2: color-mix(in srgb, var(--on-c) 9%, transparent); }
+.card[data-pattern], .detail[data-pattern] { --pk: color-mix(in srgb, var(--on-c) 16%, transparent); --pk2: color-mix(in srgb, var(--on-c) 9%, transparent); }
 [data-pattern="dots"]     { --pat: radial-gradient(var(--pk) 2.2px, transparent 2.6px); --pat-size: 22px 22px; }
 [data-pattern="grid"]     { --pat: linear-gradient(var(--pk2) 2px, transparent 2px), linear-gradient(90deg, var(--pk2) 2px, transparent 2px); --pat-size: 26px 26px; }
 [data-pattern="stripes"]  { --pat: repeating-linear-gradient(-45deg, var(--pk2) 0 10px, transparent 10px 24px); }
@@ -158,16 +158,19 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
 /* pattern clipped to the card; the character is allowed to burst out of the top */
 .card-box::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background-image: var(--pat); background-size: var(--pat-size);
+  background-image: var(--pat, none); background-size: var(--pat-size, auto);
 }
 
 /* ---------- Pop-out effects on the art (drop shadow + glow/outline), built in js/shared.js ---------- */
 .card-figure img { filter: var(--fx, none); transition: filter .45s var(--spring); }
 .card:hover .card-figure img, .card:focus-visible .card-figure img { filter: var(--fx-hover, var(--fx, none)); }
+.card-clip {
+  position: absolute; inset: 0; pointer-events: none;
+  clip-path: inset(-60% 0 0 0 round 0 0 var(--card-radius) var(--card-radius));   /* clipped at sides & bottom, free at the top; doesn't move on hover */
+}
 .card-figure {
-  position: absolute; left: 0; right: 0; bottom: 0; top: -22%;
+  position: absolute; left: 0; right: 0; bottom: -14%; top: -20%;
   display: flex; justify-content: center; align-items: flex-end;
-  clip-path: inset(-60% 0 0 0 round 0 0 var(--card-radius) var(--card-radius));   /* clipped at sides & bottom, free at the top */
   transform-origin: 50% 100%;
   transition: transform .45s var(--spring);
 }
@@ -190,7 +193,7 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
 
 /* stand-in until artwork is added */
 .ph {
-  position: absolute; inset: 22% 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: absolute; inset: 20% 0 12%; display: flex; flex-direction: column; align-items: center; justify-content: center;
   color: var(--on-c); font-family: var(--font-head); font-weight: 900; letter-spacing: -.04em; line-height: 1;
   font-size: clamp(64px, 7vw, 96px);
 }
@@ -211,7 +214,7 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
 .detail-bg {
   position: absolute; inset: 0; overflow: hidden;
   background-color: var(--c);
-  background-image: var(--pat); background-size: var(--pat-size);
+  background-image: var(--pat, none); background-size: var(--pat-size, auto);
   transition: background-color .5s ease;
 }
 .detail-scene { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity .6s; }

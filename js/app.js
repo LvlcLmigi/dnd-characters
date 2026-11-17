@@ -55,7 +55,7 @@
   const cardHTML = (c, i) => `
       <li style="--i:${i}">
         <a class="card${c.hidden ? " is-hidden" : ""}" href="#${esc(c._id)}" style="${colorVars(c)};${cardFx(c)}" data-pattern="${esc(cardPattern(c))}">
-          <span class="card-box"><span class="card-figure">${art(c, "card")}</span></span>
+          <span class="card-box"><span class="card-clip"><span class="card-figure">${art(c, "card")}</span></span></span>
           <span class="card-name">${esc(c.name)}</span>
           <span class="card-sub">${esc(subline(c))}</span>
         </a>
