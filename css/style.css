@@ -31,7 +31,10 @@ body {
   margin: 0; background: var(--page); color: var(--ink);
   font-family: var(--font); font-size: 17px; line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  min-height: calc(100vh / var(--zoom, 1)); display: flex; flex-direction: column;
 }
+main { flex: 1; display: flex; flex-direction: column; }
+main > .browse { flex: 1; }
 body.is-locked { overflow: hidden; }
 a { color: inherit; text-decoration: none; }
 img { display: block; max-width: 100%; }
@@ -227,7 +230,7 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
   pointer-events: none; user-select: none;
 }
 
-.detail-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; }
+.detail-scroll { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 .detail-grid {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   min-height: 100%; max-width: 1440px; margin: 0 auto;
@@ -343,6 +346,18 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
   .detail.is-locked .d-body.pos-beside { display: flex; flex-direction: row; align-items: stretch; }
   .detail.is-locked .d-body.pos-beside > * { flex: 1 1 0; min-width: 0; }
   .detail.is-locked .d-body.pos-beside .panel { max-height: none; overflow-y: auto; align-self: flex-start; max-height: 100%; }
+  /* name locked, details box scrolls along with the story */
+  .detail.is-locked.details-scroll .d-body {
+    display: block; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 32px 0; margin-top: 10px;
+    -webkit-mask-image: linear-gradient(transparent, #000 16px, #000 calc(100% - 32px), transparent);
+            mask-image: linear-gradient(transparent, #000 16px, #000 calc(100% - 32px), transparent);
+    scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--on-c) 40%, transparent) transparent;
+  }
+  .detail.is-locked.details-scroll .d-body > * + * { margin-top: 28px; }
+  .detail.is-locked.details-scroll .d-body .panel { max-height: none; overflow: visible; }
+  .detail.is-locked.details-scroll .d-desc { overflow: visible; -webkit-mask-image: none; mask-image: none; padding: 0; margin: 0; min-height: 0; }
+  .detail.is-locked.details-scroll .d-body.pos-beside { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .detail.is-locked.details-scroll .d-body.pos-beside > * + * { margin-top: 0; }
   .detail.is-locked .d-name { font-size: clamp(44px, min(7vw, 11vh), 108px); }
 }
 
@@ -376,8 +391,8 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
     padding-top: calc(var(--tx-top, 8) * 1vh / var(--zoom, 1));
   }
   .detail.is-locked .detail-text { padding-top: calc(var(--tx-top, 8) * 1vh / var(--zoom, 1)); }
-  .detail-figure { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-  .figure-holder { display: block; padding: 0; }
+  .detail-figure { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+  .figure-holder { display: block; padding: 0; position: absolute; inset: 0; height: auto; }
   .art-pos {
     position: absolute; left: var(--art-x, 72%); bottom: var(--art-bottom, 0%); height: var(--art-h, 96%);
     max-width: none; transform: translateX(-50%);

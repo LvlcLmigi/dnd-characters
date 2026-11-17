@@ -173,6 +173,7 @@
     detail.setAttribute("style", colorVars(c) + (st().effectsOnPage !== false ? `;--fx-page:${D.artFilter(st(), c, 2.6)}` : "") + ";" + layoutVars(c));
     detail.dataset.pattern = pagePattern(c);
     detail.classList.toggle("is-locked", st().lockHeader !== false);
+    detail.classList.toggle("details-scroll", st().lockDetails === false);
     ["above", "below", "beside"].forEach((p) => detail.classList.toggle("pos-" + p, detailsPos() === p));
     const scene = $("#detail-scene");
     const bg = imgOf(c, "backgroundImage");
@@ -268,9 +269,10 @@
   /* ---------- events ---------- */
   detail.addEventListener("wheel", (e) => {
     if (!detail.classList.contains("is-locked")) return;
-    const inScroller = e.target.closest(".d-desc, .panel");
+    const sel = detail.classList.contains("details-scroll") ? ".d-body" : ".d-desc, .panel";
+    const inScroller = e.target.closest(sel);
     if (inScroller && inScroller.scrollHeight > inScroller.clientHeight) return;
-    const desc = $(".d-desc", detail);
+    const desc = $(detail.classList.contains("details-scroll") ? ".d-body" : ".d-desc", detail);
     if (desc && desc.scrollHeight > desc.clientHeight) { desc.scrollTop += e.deltaY; e.preventDefault(); }
   }, { passive: false });
 

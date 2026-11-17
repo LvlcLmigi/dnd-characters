@@ -45,7 +45,8 @@
       glowSize: 4,                     // px on a card
       effectsOnPage: true,
       // character pages
-      lockHeader: true,                // name + details stay put, only the description scrolls
+      lockHeader: true,                // name + title stay put, only the text below scrolls
+      lockDetails: true,               // with lockHeader: details box stays put too (false = it scrolls with the story)
       detailsPosition: "above",        // above | below | beside
       pagePattern: "",                 // "" = same as cards
       // character page layout on larger screens (percentages of the screen)

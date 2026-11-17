@@ -582,7 +582,8 @@
     <section class="sec">
       <h2>Character pages</h2>
       <div class="grid">
-        <label class="toggle full"><input type="checkbox" data-st="lockHeader" data-type="bool" ${st.lockHeader !== false ? "checked" : ""}> Keep the name and details box in place; only the story scrolls</label>
+        <label class="toggle full"><input type="checkbox" data-st="lockHeader" data-type="bool" ${st.lockHeader !== false ? "checked" : ""}> Keep the name and title in place while the rest scrolls</label>
+        <label class="toggle full" ${st.lockHeader === false ? 'style="opacity:.45"' : ""}><input type="checkbox" data-st="lockDetails" data-type="bool" ${st.lockDetails !== false ? "checked" : ""} ${st.lockHeader === false ? "disabled" : ""}> Keep the details box in place too (off: it scrolls along with the story)</label>
         <label class="field full"><span>Details box position</span>${chipRow("style.detailsPosition", [["above", "Above the story"], ["below", "Below the story"], ["beside", "Beside the story"]], st.detailsPosition)}</label>
         <label class="field full"><span>Page pattern</span>${chipRow("style.pagePattern", [["", "Same as cards"], ...D.PATTERNS], st.pagePattern || "")}</label>
       </div>
@@ -832,6 +833,7 @@
     const el = e.target;
     if (el.matches('select[data-st], input[type=checkbox][data-st]')) {
       state.site.style[el.dataset.st] = readValue(el);
+      if (el.dataset.st === "lockHeader") { const y = $("#editor").scrollTop; renderEditor(); $("#editor").scrollTop = y; }
       changed({ side: false });
     }
     if (el.matches('[data-act-toggle="custom-art"]') && cur()) {
