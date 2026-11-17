@@ -12,9 +12,9 @@
     "browseBg": "#e8f1ff",
     "headingFont": "Rubik",
     "bodyFont": "Rubik",
-    "zoom": 85,
-    "cardSize": 260,
-    "cardRadius": 32,
+    "zoom": 100,
+    "cardSize": 310,
+    "cardRadius": 40,
     "pattern": "dots",
     "showDie": true,
     "heroImage": "",
@@ -32,7 +32,13 @@
     "glowSize": 9,
     "effectsOnPage": true,
     "lockHeader": true,
-    "detailsPosition": "above",
-    "pagePattern": ""
+    "detailsPosition": "below",
+    "pagePattern": "",
+    "textLeft": 6,
+    "textWidth": 38,
+    "textTop": 8,
+    "artX": 72,
+    "artHeight": 96,
+    "artBottom": 0
   }
 }
