@@ -10,8 +10,8 @@
     "subrace": "",
     "class": "Warlock",
     "subclass": "Aberrant Mind",
-    "multiclass": "Sorcerer 3",
-    "level": 8,
+    "multiclass": "",
+    "level": "",
     "background": "",
     "alignment": "",
     "deity": "",
@@ -19,21 +19,18 @@
     "height": "",
     "pronouns": "",
     "status": "Alive",
-    "stats": {
-      "STR": 9,
-      "DEX": 11,
-      "CON": 15,
-      "INT": 14,
-      "WIS": 13,
-      "CHA": 18
-    },
+    "stats": {},
     "quote": "",
-    "bio": [],
+    "bio": [
+      "Barbara once lived an average life as a young woman working in her parents’ weapons and tools shop. Similarly, some titanic monstrosity, with a name too long, complex, and alien to be recorded accurately by anyone, lived (if you can call its existence “living”) an average life as an unfathomably old being drifting through the countless layers of the Far Realm outside of reality.",
+      "Barbara’s life, however, was flipped on its head when the aberration neglectfully passed through some corner of reality that intersected Barbara’s plane of existence. The intersection was brief, occurring for less than a femtosecond, however this was long enough to unintentionally impart a minuscule portion of the alien’s knowledge to Barbara’s brain, the point of contact.",
+      "Within this ancient, cursed, esoteric packet of information was the impossible name of the being and secrets about the nature of its unreality. Barbara was immediately struck by madness, as her Human brain was unable to process this twisted information. \nBarbara was treated by the town’s apothecaries and healers; however, no combination of medicinal herbs or healing magic could quell the insanity within her.",
+      "Whenever she closed her eyes, Barbara could see the horrific monster lingering in the dark greyness, and this kept her from sleeping for nights on end. Barbara’s family only found one way to calm her down, Barbara’s mother would recount stories of her early life, particularly regarding her relationship with her husband, Barbara’s father. Barbara’s wailing would quiet as she listened to the stories being told, like a child would when hearing bedtime stories. One day, Barbara fell asleep during one of these stories, which was a huge improvement from the insomniac state she had been in for days.",
+      "When she awoke, she acted normal, as if the madness had just disappeared. However, the insanity had not gone away, it was only now being managed by Barbara as she deluded herself into believing that the horrific being that has been plaguing her mind is her husband, and that sharing with her his name was a token of his trust and love for her. Using this delusion as a coping mechanism, Barbara could now access the other bits of otherworldly information given to her, allowing her to tap into the dark and twisted magic that her husband uses, without losing too much of her sanity.",
+      "She left her town in pursuit of higher mastery of her newfound abilities, so that one day she may be able to use them to meet with her husband and live out their eternal marriage in the layers of the Far Realm."
+    ],
     "traits": [],
     "goals": "",
-    "extra": {
-      "Patron": "Agnizudathidanranrimaglimanios"
-    },
     "art": "images/characters/barbara-mwk69z5v.png",
     "backgroundImage": "images/backgrounds/barbara-mwk69uk9.jpg"
   }
