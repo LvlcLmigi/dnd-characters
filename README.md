@@ -42,3 +42,6 @@ You can also edit the two JSON files directly on GitHub if you ever need to.
 ## Hosting
 - GitHub Pages, deployed from the `main` branch root; custom domain from the `CNAME` file.
 - DNS (Porkbun): one CNAME record, `dnd` → `lvlclmigi.github.io`.
+
+## Updating the code
+`index.html` and `admin.html` load the CSS/JS with a `?v=` version tag. Bump it whenever those files change so browsers don't use a cached copy (GitHub Pages caches for 10 minutes).
