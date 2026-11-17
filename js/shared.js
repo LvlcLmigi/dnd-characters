@@ -32,6 +32,14 @@
       heroImage: "", browseImage: "",
       // home page
       heroStyle: "compact",            // compact | big
+      heroAlign: "left",               // left | center | right   (title block)
+      cardAlign: "center",             // left | center | right   (cards, section heading, folder tabs)
+      cardNameAlign: "center",         // left | center | right   (name under each card)
+      gridWidth: 1240,                 // px, widest the card area gets
+      cardGapX: 28, cardGapY: 72,      // px between cards
+      cardsPerRow: 0,                  // 0 = as many as fit
+      browsePadTop: 48,                // px above the character section heading
+      showCardSub: true,               // race · class under names
       folderDisplay: "tabs",           // tabs | sections
       // pop-out effects on the character art (cards, and optionally their page)
       shadow: "on",                    // on | none   - offset drop shadow
@@ -154,6 +162,27 @@
     r.setProperty("--hero-image", url(st.heroImage));
     r.setProperty("--browse-image", url(st.browseImage));
     doc.documentElement.dataset.hero = st.heroStyle === "big" ? "big" : "compact";
+    const al = (v) => (v === "left" || v === "right" ? v : "center");
+    const flex = { left: "flex-start", center: "center", right: "flex-end" };
+    const num = (v, d, lo, hi) => { const x = Number(v); return Math.max(lo, Math.min(hi, isNaN(x) ? d : x)); };
+    const ha = st.heroAlign === "center" || st.heroAlign === "right" ? st.heroAlign : "left";
+    r.setProperty("--hero-align", ha);
+    r.setProperty("--hero-justify", flex[ha]);
+    r.setProperty("--hero-intro-ml", ha === "left" ? "0" : "auto");
+    r.setProperty("--hero-intro-mr", ha === "right" ? "0" : ha === "center" ? "auto" : "0");
+    r.setProperty("--grid-justify", { left: "start", center: "center", right: "end" }[al(st.cardAlign)]);
+    r.setProperty("--head-align", al(st.cardAlign));
+    r.setProperty("--gm-l", al(st.cardAlign) === "left" ? "0" : "auto");      // the whole card area hugs that side
+    r.setProperty("--gm-r", al(st.cardAlign) === "right" ? "0" : "auto");
+    r.setProperty("--card-text-align", al(st.cardNameAlign));
+    r.setProperty("--grid-max", num(st.gridWidth, 1240, 400, 4000) + "px");
+    r.setProperty("--gap-x", num(st.cardGapX, 28, 0, 200) + "px");
+    r.setProperty("--gap-y", num(st.cardGapY, 72, 0, 300) + "px");
+    r.setProperty("--browse-pad-top", num(st.browsePadTop, 48, 0, 400) + "px");
+    const per = num(st.cardsPerRow, 0, 0, 12);
+    if (per > 0) { r.setProperty("--per-row", String(per)); doc.documentElement.dataset.perRow = String(per); }
+    else { r.removeProperty("--per-row"); delete doc.documentElement.dataset.perRow; }
+    doc.documentElement.dataset.cardSub = st.showCardSub === false ? "off" : "on";
 
     const z = Math.max(60, Math.min(160, Number(st.zoom) || 100));
     doc.body.style.zoom = z === 100 ? "" : String(z / 100);
@@ -162,7 +191,7 @@
     const hero = doc.getElementById("hero");
     if (hero) hero.classList.toggle("has-image", !!st.heroImage);
     const die = doc.querySelector(".hero-art");
-    if (die) die.style.display = st.showDie === false || st.heroImage ? "none" : "";
+    if (die) die.style.display = st.showDie === false || st.heroImage || st.heroAlign === "right" ? "none" : "";
 
     const link = doc.getElementById("font-link");
     if (link) {

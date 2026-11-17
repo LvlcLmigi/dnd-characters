@@ -531,9 +531,26 @@
       <h2>Home page</h2>
       <div class="grid">
         <label class="field full"><span>Top of the page</span>${chipRow("style.heroStyle", [["compact", "Compact: characters right away"], ["big", "Big title"]], st.heroStyle)}</label>
+        <label class="field full"><span>Title position</span>${chipRow("style.heroAlign", [["left", "Left"], ["center", "Centre"], ["right", "Right"]], st.heroAlign)}</label>
         ${range("Site zoom", "zoom", 70, 140, 5, "%")}
         <label class="toggle"><input type="checkbox" data-st="showDie" data-type="bool" ${st.showDie !== false ? "checked" : ""}> Show the d20 drawing</label>
       </div>
+    </section>
+
+    <section class="sec">
+      <h2>Character card layout</h2>
+      <p class="hint">How the character cards are arranged on the home page. Phones always show two per row.</p>
+      <div class="grid">
+        <label class="field full"><span>Cards, heading &amp; folder tabs</span>${chipRow("style.cardAlign", [["left", "Left"], ["center", "Centre"], ["right", "Right"]], st.cardAlign)}</label>
+        <label class="field full"><span>Names under the cards</span>${chipRow("style.cardNameAlign", [["left", "Left"], ["center", "Centre"], ["right", "Right"]], st.cardNameAlign)}</label>
+        <label class="field full"><span>Cards per row</span>${chipRow("style.cardsPerRow", [["0", "As many as fit"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"], ["6", "6"]], String(st.cardsPerRow || 0))}</label>
+        ${range("Card area width", "gridWidth", 600, 2400, 20, "px")}
+        ${range("Space above the cards", "browsePadTop", 0, 200, 4, "px")}
+        ${range("Space between cards ↔", "cardGapX", 0, 120, 2, "px")}
+        ${range("Space between rows ↕", "cardGapY", 20, 200, 2, "px")}
+        <label class="toggle full"><input type="checkbox" data-st="showCardSub" data-type="bool" ${st.showCardSub !== false ? "checked" : ""}> Show race &amp; class under each name</label>
+      </div>
+      <div class="ed-actions" style="margin-top:14px"><button class="btn ghost small" data-act="reset-home">Reset card layout</button></div>
     </section>
 
     <section class="sec">
@@ -816,6 +833,10 @@
       const v = readValue(el);
       if (el.closest(".color-input")) { syncColorPair(el, v); if (!validColor(v)) return; }
       state.site.style[key] = v;
+      if (/^(card|grid|browse)/.test(key) && state.sitePreviewChar) {
+        state.sitePreviewChar = "";
+        const sel = $("[data-preview-char]"); if (sel) sel.value = "";
+      }
       if (/^(text|art)/.test(key) && !state.sitePreviewChar && state.chars[0]) {
         state.sitePreviewChar = state.chars[0].id;
         const sel = $("[data-preview-char]"); if (sel) sel.value = state.sitePreviewChar;
@@ -874,7 +895,10 @@
       e.preventDefault();
       const [scope, key] = chip.dataset.chip.split(".");
       const val = chip.dataset.val;
-      if (scope === "style") state.site.style[key] = val;
+      if (scope === "style") state.site.style[key] = key === "cardsPerRow" ? Number(val) : val;
+      if (scope === "style" && /^(card|hero)/.test(key) && state.sitePreviewChar) {
+        state.sitePreviewChar = ""; const sel = $("[data-preview-char]"); if (sel) sel.value = "";
+      }
       else if (scope === "c" && cur()) { if (val) cur()[key] = val; else delete cur()[key]; }
       $$(`[data-chip="${chip.dataset.chip}"]`).forEach((b) => b.classList.toggle("on", b === chip));
       changed({ side: false });
@@ -929,6 +953,10 @@
         $$("[data-kv-k]").pop().focus();
         break;
       }
+      case "reset-home":
+        ["heroAlign", "cardAlign", "cardNameAlign", "gridWidth", "cardGapX", "cardGapY", "cardsPerRow", "browsePadTop", "showCardSub"].forEach((k) => { state.site.style[k] = D.DEFAULT_SITE.style[k]; });
+        renderEditor(); changed({ side: false });
+        break;
       case "reset-layout":
         ["textLeft", "textWidth", "textTop", "artX", "artHeight", "artBottom"].forEach((k) => { state.site.style[k] = D.DEFAULT_SITE.style[k]; });
         renderEditor(); changed({ side: false });

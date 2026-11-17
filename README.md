@@ -11,6 +11,7 @@ From there you can:
 - upload character art and page backgrounds (images are resized automatically; transparent PNGs get their empty edges trimmed)
 - import a character from D&D Beyond (the "Export to PDF" file, a public character link, or the one-click bookmark)
 - sort characters into folders (shown on the site as tabs or as sections)
+- arrange the home page: title position, card alignment, cards per row, card area width, spacing, and whether race & class show under names
 - change the site's titles, colours, fonts, zoom, card size, card corners, patterns and background images
 - add a drop shadow and a glow or outline that follow the shape of the character art (on cards and their page)
 - choose the character page layout: name and details locked in place with only the story scrolling, the details box above, below or beside the story, plus where the text and art sit on screen (with per-character art position)

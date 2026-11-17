@@ -59,11 +59,12 @@ button { font: inherit; color: inherit; }
 .hero {
   position: relative; overflow: hidden;
   padding: clamp(48px, 8vw, 104px) var(--gutter) clamp(56px, 8vw, 110px);
-  display: flex; align-items: center;
+  display: flex; align-items: center; justify-content: var(--hero-justify, flex-start);
   background-image: var(--hero-image); background-size: cover; background-position: center;
 }
 .hero.has-image .hero-art { display: none; }
-.hero-inner { position: relative; z-index: 1; max-width: 640px; }
+.hero-inner { position: relative; z-index: 1; max-width: 640px; text-align: var(--hero-align, left); }
+.hero-inner .hero-intro { margin-left: var(--hero-intro-ml, 0); margin-right: var(--hero-intro-mr, 0); }
 .hero-title {
   margin: 0; font-family: var(--font-head); font-weight: 900; letter-spacing: -.035em; line-height: .9;
   font-size: clamp(64px, 12vw, 148px); color: var(--ink);
@@ -95,8 +96,9 @@ html[data-hero="compact"] .hero-intro { margin: 12px 0 0; font-size: clamp(16px,
 html[data-hero="compact"] .hero-intro:empty { display: none; }
 html[data-hero="compact"] #browse-btn { display: none; }
 html[data-hero="compact"] .hero-art { width: clamp(130px, 15vw, 210px); right: clamp(16px, 5vw, 80px); }
-html[data-hero="compact"] .browse { padding-top: clamp(36px, 4.5vw, 60px); }
-html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44px); font-size: clamp(24px, 2.8vw, 36px); }
+html[data-hero="compact"] .browse { padding-top: var(--browse-pad-top, clamp(36px, 4.5vw, 60px)); }
+.browse { padding-top: var(--browse-pad-top, clamp(48px, 7vw, 88px)) !important; }
+html[data-hero="compact"] .browse-heading { margin-bottom: clamp(44px, 5vw, 72px); font-size: clamp(24px, 2.8vw, 36px); }
 
 /* ---------- Browse ---------- */
 .browse {
@@ -106,16 +108,16 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
   border-radius: clamp(28px, 4vw, 56px) clamp(28px, 4vw, 56px) 0 0;
   scroll-margin-top: 68px;
 }
-.browse-heading { margin: 0 0 clamp(48px, 6vw, 72px); font-family: var(--font-head); font-weight: 900; font-size: clamp(32px, 4vw, 48px); letter-spacing: -.02em; text-align: center; }
+.browse-heading { max-width: var(--grid-max, 1240px); margin: 0 var(--gm-r, auto) clamp(48px, 6vw, 72px) var(--gm-l, auto); font-family: var(--font-head); font-weight: 900; font-size: clamp(32px, 4vw, 48px); letter-spacing: -.02em; text-align: var(--head-align, center); }
 .cards {
-  list-style: none; margin: 0 auto; padding: 0; max-width: 1240px;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(var(--card-size), 42vw), var(--card-size))); justify-content: center;
-  gap: clamp(56px, 6vw, 80px) clamp(18px, 2.4vw, 32px);
+  list-style: none; margin: 0 var(--gm-r, auto) 0 var(--gm-l, auto); padding: 0; max-width: var(--grid-max, 1240px);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(var(--card-size), 42vw), var(--card-size))); justify-content: var(--grid-justify, center);
+  gap: var(--gap-y, clamp(56px, 6vw, 80px)) var(--gap-x, clamp(18px, 2.4vw, 32px));
 }
 .browse-heading:empty { display: none; }
 
 /* folders */
-.folder-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0 auto clamp(56px, 6vw, 76px); max-width: 1240px; }
+.folder-tabs { display: flex; flex-wrap: wrap; justify-content: var(--grid-justify, center); gap: 10px; margin: 0 var(--gm-r, auto) clamp(56px, 6vw, 76px) var(--gm-l, auto); max-width: var(--grid-max, 1240px); }
 .folder-tab {
   display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 20px; border: 0; border-radius: 999px; cursor: pointer;
   background: var(--white); color: var(--ink); font-family: var(--font-head); font-weight: 800; font-size: 16px;
@@ -127,7 +129,7 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
 .folder-tab.on { background: var(--brand); color: #fff; box-shadow: 0 4px 0 var(--brand-dark); }
 .folder-tab.on small { background: rgba(255,255,255,.22); }
 .folder-section + .folder-section { margin-top: clamp(64px, 7vw, 96px); }
-.folder-title { max-width: 1240px; margin: 0 auto clamp(56px, 6vw, 72px); text-align: center; font-family: var(--font-head); font-weight: 900; font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -.015em; }
+.folder-title { max-width: var(--grid-max, 1240px); margin: 0 var(--gm-r, auto) clamp(56px, 6vw, 72px) var(--gm-l, auto); text-align: var(--head-align, center); font-family: var(--font-head); font-weight: 900; font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -.015em; }
 .folder-title small { display: block; font-family: var(--font); font-weight: 600; font-size: 14px; letter-spacing: 0; color: var(--ink-2); margin-top: 2px; }
 .empty-folder { text-align: center; color: var(--ink-2); padding: 40px 0; }
 
@@ -180,6 +182,11 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(28px, 3.5vw, 44
 .card-figure img { height: 100%; width: auto; max-width: none; object-fit: contain; object-position: bottom; }
 .card-name { display: block; margin-top: 22px; font-family: var(--font-head); font-weight: 800; font-size: 22px; line-height: 1.15; letter-spacing: -.01em; transition: color .2s; }
 .card-sub { display: block; margin-top: 4px; font-size: 14px; color: var(--ink-2); }
+html[data-card-sub="off"] .card-sub { display: none; }
+.card { text-align: var(--card-text-align, center); }
+@media (min-width: 601px) {
+  html[data-per-row] .cards { grid-template-columns: repeat(var(--per-row), minmax(0, var(--card-size))); }
+}
 
 .card:hover .card-box, .card:focus-visible .card-box { transform: translateY(-8px); box-shadow: 0 14px 0 color-mix(in srgb, var(--c) 70%, #000); }
 .card:hover .card-figure, .card:focus-visible .card-figure { animation: hop .6s var(--spring) both; }
