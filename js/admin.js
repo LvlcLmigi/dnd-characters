@@ -49,7 +49,7 @@
   /* =========================================================
      Serialising & dirty tracking
      ========================================================= */
-  const CHAR_KEYS = ["id", "name", "epithet", "player", "color", "hidden", "race", "subrace", "class", "subclass", "multiclass", "level",
+  const CHAR_KEYS = ["id", "name", "epithet", "player", "color", "hidden", "folder", "cardPattern", "pagePattern", "cardBackdrop", "race", "subrace", "class", "subclass", "multiclass", "level",
     "background", "alignment", "deity", "age", "height", "pronouns", "status", "stats", "quote", "bio", "traits", "goals", "extra", "art", "backgroundImage"];
 
   function cleanChar(c) {
@@ -265,7 +265,7 @@
     $("#nav-import").classList.toggle("on", state.view.type === "import");
     const list = $("#char-list");
     if (!state.chars.length) { list.innerHTML = `<li class="empty-list">No characters yet.</li>`; return; }
-    list.innerHTML = state.chars.map((c, i) => {
+    const item = (c, i) => {
       const col = c.color || D.PALETTE[i % D.PALETTE.length];
       const on = state.view.type === "char" && state.view.i === i;
       const sub = [c.race, c.class].filter(has).join(" · ") || (c.hidden ? "Hidden" : "");
@@ -274,7 +274,14 @@
         <span class="char-meta"><b>${esc(c.name || "Untitled")}</b><small>${esc(sub)}${c.hidden ? " · hidden" : ""}</small></span>
         ${charChanged(c) ? '<span class="dot" title="Not published yet"></span>' : ""}
       </button></li>`;
-    }).join("");
+    };
+    const folders = state.site.folders || [];
+    if (!folders.length) { list.innerHTML = state.chars.map(item).join(""); return; }
+    const known = new Set(folders.map((f) => f.id));
+    const groups = folders.map((f) => ({ name: f.name || "Folder", items: state.chars.map((c, i) => [c, i]).filter(([c]) => c.folder === f.id) }));
+    groups.push({ name: "No folder", items: state.chars.map((c, i) => [c, i]).filter(([c]) => !c.folder || !known.has(c.folder)) });
+    list.innerHTML = groups.filter((g, n) => g.items.length || n < groups.length - 1)
+      .map((g) => `<li class="folder-head">${esc(g.name)} <small>${g.items.length}</small></li>${g.items.map(([c, i]) => item(c, i)).join("") || '<li class="empty-list">Empty</li>'}`).join("");
   }
   $("#char-list").addEventListener("click", (e) => {
     const b = e.target.closest("[data-char]");
@@ -284,6 +291,8 @@
   $("#nav-import").addEventListener("click", () => go({ type: "import", target: null }));
   $("#btn-new").addEventListener("click", () => {
     const c = newCharacter();
+    const from = cur();
+    if (from && from.folder) c.folder = from.folder;
     state.chars.push(c);
     go({ type: "char", i: state.chars.length - 1 });
     changed();
@@ -345,6 +354,8 @@
     <input type="${opts.type || "text"}" ${attrs} value="${esc(value)}"${opts.list ? ` list="${opts.list}"` : ""}${opts.placeholder ? ` placeholder="${esc(opts.placeholder)}"` : ""}${opts.id ? ` id="${opts.id}"` : ""}${opts.min !== undefined ? ` min="${opts.min}"` : ""}${opts.max !== undefined ? ` max="${opts.max}"` : ""}></label>`;
   const area = (label, attrs, value, opts = {}) => `<label class="field${opts.full ? " full" : ""}"><span>${label}${opts.hint ? ` <small>${opts.hint}</small>` : ""}</span>
     <textarea ${attrs} rows="${opts.rows || 4}"${opts.placeholder ? ` placeholder="${esc(opts.placeholder)}"` : ""}>${esc(value)}</textarea></label>`;
+  const chipRow = (key, options, current) => `<span class="chips">${options.map(([v, l]) =>
+    `<button class="chip${String(current ?? "") === v ? " on" : ""}" data-chip="${key}" data-val="${esc(v)}">${esc(l)}</button>`).join("")}</span>`;
   const colorField = (attrs, value) => `<span class="color-input"><input type="color" ${attrs} value="${esc(/^#[0-9a-f]{6}$/i.test(value) ? value : "#000000")}" aria-label="Pick colour"><input type="text" ${attrs} value="${esc(value)}" spellcheck="false" aria-label="Colour code"></span>`;
 
   function uploadBox(label, key, path, opts = {}) {
@@ -394,6 +405,11 @@
         ${uploadBox("Character art", "art", c.art, { kind: "art", color: col, help: "A PNG with a transparent background, tall and cropped close to the character." })}
         ${uploadBox("Page background", "backgroundImage", c.backgroundImage, { kind: "bg", help: "Optional scene behind them on their page. It fades into their colour on the text side." })}
       </div>
+      <div class="grid" style="margin-top:18px">
+        <label class="field full"><span>Glow / backdrop behind them on their card</span>${chipRow("c.cardBackdrop", [["", "Site default"], ...D.BACKDROPS], c.cardBackdrop || "")}</label>
+        <label class="field full"><span>Card pattern</span>${chipRow("c.cardPattern", [["", "Site default"], ...D.PATTERNS], c.cardPattern || "")}</label>
+        <label class="field full"><span>Pattern on their page</span>${chipRow("c.pagePattern", [["", "Site default"], ...D.PATTERNS], c.pagePattern || "")}</label>
+      </div>
       <div style="margin-top:16px"><label class="toggle"><input type="checkbox" data-c="hidden" data-type="bool" ${c.hidden ? "checked" : ""}> Hide this character from the site</label></div>
     </section>
 
@@ -403,6 +419,7 @@
         ${text("Name", 'data-c="name"', c.name, { id: "f-name" })}
         ${text("Title / epithet", 'data-c="epithet"', c.epithet, { placeholder: "e.g. The Unquiet Mind" })}
         ${text("Played by", 'data-c="player"', c.player)}
+        <label class="field"><span>Folder</span><select data-c="folder"><option value="">No folder</option>${(state.site.folders || []).map((f) => `<option value="${esc(f.id)}"${f.id === c.folder ? " selected" : ""}>${esc(f.name)}</option>`).join("")}</select></label>
         <label class="field"><span>Link <small>(their own web address)</small></span><span class="prefixed"><b>${esc(host)}/#</b><input type="text" data-c="id" value="${esc(c.id)}" spellcheck="false"></span></label>
       </div>
     </section>
@@ -460,7 +477,9 @@
     const fontOpts = (sel, headingOk) => Object.entries(D.FONTS)
       .filter(([, f]) => headingOk || !f.headingOnly)
       .map(([name, f]) => `<option value="${esc(name)}"${name === sel ? " selected" : ""}>${esc(f.label)}</option>`).join("");
-    const range = (label, key, min, max, step, unit) => `<label class="field"><span>${label}</span><span class="range"><input type="range" data-st="${key}" data-type="num" min="${min}" max="${max}" step="${step}" value="${esc(st[key])}"><output data-out="${key}">${esc(st[key])}${unit}</output></span></label>`;
+    const range = (label, key, min, max, step, unit) => `<label class="field"><span>${label}</span><span class="range"><input type="range" data-st="${key}" data-type="num" min="${min}" max="${max}" step="${step}" value="${esc(st[key])}"><output data-out="${key}" data-unit="${unit}">${esc(st[key])}${unit}</output></span></label>`;
+    const folders = s.folders || [];
+    const count = (id) => state.chars.filter((c) => c.folder === id).length;
     const colour = (label, key) => `<label class="field"><span>${label}</span>${colorField(`data-st="${key}"`, st[key])}</label>`;
     return `
     <div class="ed-head"><div><h1>Site &amp; style</h1><p>Titles, colours, fonts, zoom and backgrounds for the whole site.</p></div>
@@ -498,14 +517,51 @@
     </section>
 
     <section class="sec">
-      <h2>Size &amp; layout</h2>
+      <h2>Home page</h2>
       <div class="grid">
+        <label class="field full"><span>Top of the page</span>${chipRow("style.heroStyle", [["compact", "Compact: characters right away"], ["big", "Big title"]], st.heroStyle)}</label>
         ${range("Site zoom", "zoom", 70, 140, 5, "%")}
+        <label class="toggle"><input type="checkbox" data-st="showDie" data-type="bool" ${st.showDie !== false ? "checked" : ""}> Show the d20 drawing</label>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>Folders</h2>
+      <p class="hint">Sort characters into groups like Main party, NPCs or Retired. Choose each character's folder on their page.</p>
+      <div class="folder-rows">
+        ${folders.map((f, n) => `<div class="folder-row">
+          <input type="text" data-folder-name="${n}" value="${esc(f.name)}" aria-label="Folder name">
+          <span class="folder-count">${count(f.id)} ${count(f.id) === 1 ? "character" : "characters"}</span>
+          <button class="icon-btn" data-act="folder-up" data-f="${n}" ${n === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
+          <button class="icon-btn" data-act="folder-down" data-f="${n}" ${n === folders.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button>
+          <button class="icon-btn" data-act="folder-del" data-f="${n}" aria-label="Delete folder">✕</button>
+        </div>`).join("") || '<p class="hint" style="margin:0">No folders yet.</p>'}
+      </div>
+      <button class="btn ghost small" data-act="folder-add" style="margin-top:12px">+ Add folder</button>
+      ${folders.length ? `<label class="field" style="margin-top:16px"><span>Show folders on the site as</span>${chipRow("style.folderDisplay", [["tabs", "Tabs to switch between"], ["sections", "Sections, one after another"]], st.folderDisplay)}</label>` : ""}
+    </section>
+
+    <section class="sec">
+      <h2>Character cards</h2>
+      <div class="grid">
         ${range("Card size", "cardSize", 160, 360, 10, "px")}
         ${range("Card corner roundness", "cardRadius", 0, 120, 2, "px")}
-        <label class="field"><span>Pattern on cards &amp; pages</span><span class="chips">${[["dots", "Dots"], ["grid", "Grid"], ["stripes", "Stripes"], ["none", "None"]].map(([v, l]) => `<button class="chip${st.pattern === v ? " on" : ""}" data-pattern="${v}">${l}</button>`).join("")}</span></label>
-        <label class="toggle full"><input type="checkbox" data-st="showDie" data-type="bool" ${st.showDie !== false ? "checked" : ""}> Show the d20 drawing at the top</label>
+        <label class="field full"><span>Pattern</span>${chipRow("style.pattern", D.PATTERNS, st.pattern)}</label>
+        <label class="field full"><span>Glow / backdrop behind the character</span>${chipRow("style.cardBackdrop", D.BACKDROPS, st.cardBackdrop)}</label>
+        <label class="field"><span>Backdrop colour</span>${colorField('data-st="backdropColor"', st.backdropColor)}</label>
+        ${range("Backdrop strength", "backdropStrength", 0, 100, 5, "%")}
+        <label class="toggle full"><input type="checkbox" data-st="backdropOnPage" data-type="bool" ${st.backdropOnPage ? "checked" : ""}> Also put the backdrop behind characters on their own page</label>
       </div>
+    </section>
+
+    <section class="sec">
+      <h2>Character pages</h2>
+      <div class="grid">
+        <label class="toggle full"><input type="checkbox" data-st="lockHeader" data-type="bool" ${st.lockHeader !== false ? "checked" : ""}> Keep the name and details box in place; only the story scrolls</label>
+        <label class="field full"><span>Details box position</span>${chipRow("style.detailsPosition", [["above", "Above the story"], ["below", "Below the story"], ["beside", "Beside the story"]], st.detailsPosition)}</label>
+        <label class="field full"><span>Page pattern</span>${chipRow("style.pagePattern", [["", "Same as cards"], ...D.PATTERNS], st.pagePattern || "")}</label>
+      </div>
+      <p class="hint" style="margin:12px 0 0">On phones the whole page scrolls normally.</p>
     </section>
 
     <section class="sec">
@@ -674,7 +730,7 @@
         const h = $(".ed-head h1"); if (h) h.textContent = v || "Untitled";
         const idIn = $('[data-c="id"]'); if (idIn && idIn !== el) idIn.value = c.id;
       }
-      c[key] = v;
+      if (key === "folder" && !v) delete c.folder; else c[key] = v;
       if (key === "color") { const d = $$('.drop[data-drop="art"]'); d.forEach((x) => x.style.setProperty("--c", v)); }
       changed();
       return;
@@ -698,6 +754,11 @@
       changed({ side: false });
       return;
     }
+    if (el.dataset.folderName !== undefined) {
+      const f = state.site.folders[Number(el.dataset.folderName)];
+      if (f) { f.name = el.value; changed(); }
+      return;
+    }
     if (el.dataset.s) { state.site[el.dataset.s] = readValue(el); changed({ side: false }); return; }
     if (el.dataset.st) {
       const key = el.dataset.st;
@@ -705,7 +766,7 @@
       if (el.closest(".color-input")) { syncColorPair(el, v); if (!validColor(v)) return; }
       state.site.style[key] = v;
       const out = $(`[data-out="${key}"]`);
-      if (out) out.textContent = v + (key === "zoom" ? "%" : "px");
+      if (out) out.textContent = v + (out.dataset.unit || "");
       if (key === "headingFont" || key === "bodyFont") {
         const sample = el.parentElement.querySelector(".font-sample");
         if (sample) sample.style.fontFamily = D.fontStack(v);
@@ -745,11 +806,14 @@
       changed();
       return;
     }
-    const pat = t.closest("[data-pattern]");
-    if (pat) {
+    const chip = t.closest("[data-chip]");
+    if (chip) {
       e.preventDefault();
-      state.site.style.pattern = pat.dataset.pattern;
-      $$("[data-pattern]").forEach((b) => b.classList.toggle("on", b === pat));
+      const [scope, key] = chip.dataset.chip.split(".");
+      const val = chip.dataset.val;
+      if (scope === "style") state.site.style[key] = val;
+      else if (scope === "c" && cur()) { if (val) cur()[key] = val; else delete cur()[key]; }
+      $$(`[data-chip="${chip.dataset.chip}"]`).forEach((b) => b.classList.toggle("on", b === chip));
       changed({ side: false });
       return;
     }
@@ -802,9 +866,34 @@
         $$("[data-kv-k]").pop().focus();
         break;
       }
+      case "folder-add": {
+        state.site.folders = [...(state.site.folders || []), { id: "f-" + Date.now().toString(36), name: "New folder" }];
+        renderEditor(); changed();
+        const ins = $$("[data-folder-name]"); const last = ins[ins.length - 1];
+        if (last) { last.focus(); last.select(); }
+        break;
+      }
+      case "folder-up": case "folder-down": {
+        const n = Number(act.dataset.f), m = act.dataset.act === "folder-up" ? n - 1 : n + 1;
+        const f = state.site.folders;
+        if (m < 0 || m >= f.length) return;
+        [f[n], f[m]] = [f[m], f[n]];
+        renderEditor(); changed();
+        break;
+      }
+      case "folder-del": {
+        const n = Number(act.dataset.f), f = state.site.folders[n];
+        if (!f) return;
+        const inIt = state.chars.filter((c) => c.folder === f.id);
+        if (!confirm(`Delete the folder "${f.name}"?` + (inIt.length ? ` Its ${inIt.length} character${inIt.length === 1 ? "" : "s"} will be kept, just without a folder.` : ""))) return;
+        inIt.forEach((c) => { delete c.folder; });
+        state.site.folders.splice(n, 1);
+        renderEditor(); changed();
+        break;
+      }
       case "reset-style":
-        if (!confirm("Reset colours, fonts, zoom and card style to the defaults? Your background images are kept.")) return;
-        state.site.style = Object.assign({}, D.DEFAULT_SITE.style, { heroImage: state.site.style.heroImage, browseImage: state.site.style.browseImage });
+        if (!confirm("Reset colours, fonts, zoom, cards and page layout to the defaults? Your folders and background images are kept.")) return;
+        state.site.style = Object.assign({}, D.DEFAULT_SITE.style, { heroImage: state.site.style.heroImage, browseImage: state.site.style.browseImage, folderDisplay: state.site.style.folderDisplay });
         renderEditor(); changed({ side: false });
         break;
       case "imp-apply": applyImport(); break;

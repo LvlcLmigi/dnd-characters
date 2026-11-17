@@ -10,7 +10,11 @@ From there you can:
 - add, edit, reorder, hide, duplicate and delete characters
 - upload character art and page backgrounds (images are resized automatically; transparent PNGs get their empty edges trimmed)
 - import a character from D&D Beyond (the "Export to PDF" file, a public character link, or the one-click bookmark)
-- change the site's titles, colours, fonts, zoom, card size, card corners, pattern and background images
+- sort characters into folders (shown on the site as tabs or as sections)
+- change the site's titles, colours, fonts, zoom, card size, card corners, patterns and background images
+- add a glow, circle, outline or dark halo behind characters on their cards
+- choose the character page layout: name and details locked in place with only the story scrolling, and the details box above, below or beside the story
+- override the card pattern, page pattern and backdrop per character
 - see every change in the live preview before anyone else does
 
 Nothing changes on the real site until you press **Publish**. The site updates about a minute later.

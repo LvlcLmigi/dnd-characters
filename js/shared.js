@@ -24,13 +24,32 @@
     intro: "",
     heroTitle: "Characters",
     browseHeading: "Meet the party",
+    folders: [],                       // [{ id, name }]
     style: {
       accent: "#1a5cff", text: "#141a2b", pageBg: "#ffffff", browseBg: "#e8f1ff",
       headingFont: "Rubik", bodyFont: "Rubik",
       zoom: 100, cardSize: 240, cardRadius: 28, pattern: "dots", showDie: true,
       heroImage: "", browseImage: "",
+      // home page
+      heroStyle: "compact",            // compact | big
+      folderDisplay: "tabs",           // tabs | sections
+      // character cards
+      cardBackdrop: "glow",            // none | glow | circle | outline | shadow
+      backdropColor: "#ffffff",
+      backdropStrength: 55,            // 0-100
+      backdropOnPage: false,
+      // character pages
+      lockHeader: true,                // name + details stay put, only the description scrolls
+      detailsPosition: "above",        // above | below | beside
+      pagePattern: "",                 // "" = same as cards
     },
   };
+
+  const PATTERNS = [
+    ["dots", "Dots"], ["grid", "Grid"], ["stripes", "Stripes"], ["diamonds", "Diamonds"],
+    ["checks", "Checks"], ["sparkles", "Sparkles"], ["waves", "Waves"], ["none", "None"],
+  ];
+  const BACKDROPS = [["none", "None"], ["glow", "Soft glow"], ["circle", "Circle"], ["outline", "Outline"], ["shadow", "Dark halo"]];
 
   const PALETTE = ["#d8274d", "#e0611a", "#1fa463", "#1a5cff", "#8e3fd6", "#e64fa0", "#12a5b8", "#c9a00e"];
 
@@ -66,6 +85,7 @@
   function mergeSite(site) {
     const s = Object.assign({}, DEFAULT_SITE, site || {});
     s.style = Object.assign({}, DEFAULT_SITE.style, (site && site.style) || {});
+    s.folders = Array.isArray(s.folders) ? s.folders.filter((f) => f && f.id) : [];
     return s;
   }
 
@@ -87,9 +107,13 @@
     r.setProperty("--card-radius", Math.max(0, Math.min(200, Number(st.cardRadius) || 0)) + "px");
     r.setProperty("--hero-image", url(st.heroImage));
     r.setProperty("--browse-image", url(st.browseImage));
-    doc.documentElement.dataset.pattern = st.pattern || "dots";
+    doc.documentElement.dataset.hero = st.heroStyle === "big" ? "big" : "compact";
+    r.setProperty("--bd-color", st.backdropColor || "#ffffff");
+    r.setProperty("--bd-strength", String(Math.max(0, Math.min(100, Number(st.backdropStrength) || 0)) / 100));
+    r.setProperty("--bd-px", (1 + Math.round((Number(st.backdropStrength) || 0) / 25)) + "px");
     const z = Math.max(60, Math.min(160, Number(st.zoom) || 100));
     doc.body.style.zoom = z === 100 ? "" : String(z / 100);
+    r.setProperty("--zoom", String(z / 100));   // full-height areas divide by this so they still fill the screen
 
     const hero = doc.getElementById("hero");
     if (hero) hero.classList.toggle("has-image", !!st.heroImage);
@@ -103,5 +127,5 @@
     }
   }
 
-  window.DND = { FONTS, DEFAULT_SITE, PALETTE, inkFor, shade, luminance, fontHref, fontStack, mergeSite, applyStyle };
+  window.DND = { FONTS, DEFAULT_SITE, PALETTE, PATTERNS, BACKDROPS, inkFor, shade, luminance, fontHref, fontStack, mergeSite, applyStyle };
 })();

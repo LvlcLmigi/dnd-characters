@@ -8,7 +8,8 @@
   "use strict";
 
   const D = window.DND;
-  const $ = (s) => document.querySelector(s);
+  const $ = (s, el) => (el || document).querySelector(s);
+  const $$ = (s, el) => [...(el || document).querySelectorAll(s)];
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const has = (v) => v !== undefined && v !== null && String(v).trim() !== "";
   const toSlug = (c, i) => c.id || String(c.name || "character-" + i).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -21,6 +22,14 @@
   let resolve = (p) => p;          // maps image paths to URLs (admin preview swaps in unpublished images)
   let siteTitle = "Characters";
 
+  let activeFolder = "all";
+  try { activeFolder = localStorage.getItem("dnd-folder") || "all"; } catch { /* storage unavailable */ }
+  let navList = [];               // characters in the order shown on the page (for previous / next)
+
+  const st = () => site.style;
+  const cardPattern = (c) => c.cardPattern || st().pattern || "dots";
+  const pagePattern = (c) => c.pagePattern || st().pagePattern || cardPattern(c);
+  const cardBackdrop = (c) => c.cardBackdrop || st().cardBackdrop || "none";
   const colorOf = (c) => c.color || c.tone || D.PALETTE[c._n % D.PALETTE.length];
   const colorVars = (c) => `--c:${esc(colorOf(c))};--on-c:${D.inkFor(colorOf(c))}`;
   const imgOf = (c, key) => c[key] || (key === "backgroundImage" ? c.background_image : "") || "";
@@ -43,31 +52,78 @@
     if (!current) document.title = siteTitle;
   }
 
-  function renderCards() {
-    $("#cards").innerHTML = chars.map((c, i) => `
+  const cardHTML = (c, i) => `
       <li style="--i:${i}">
-        <a class="card${c.hidden ? " is-hidden" : ""}" href="#${esc(c._id)}" style="${colorVars(c)}">
-          <span class="card-box"><span class="card-figure">${art(c, "card")}</span></span>
+        <a class="card${c.hidden ? " is-hidden" : ""}" href="#${esc(c._id)}" style="${colorVars(c)}" data-pattern="${esc(cardPattern(c))}" data-backdrop="${esc(cardBackdrop(c))}">
+          <span class="card-box"><span class="card-backdrop"></span><span class="card-figure">${art(c, "card")}</span></span>
           <span class="card-name">${esc(c.name)}</span>
           <span class="card-sub">${esc(subline(c))}</span>
         </a>
-      </li>`).join("");
+      </li>`;
+
+  function folderGroups() {
+    const folders = site.folders || [];
+    const known = new Set(folders.map((f) => f.id));
+    const groups = folders.map((f) => ({ id: f.id, name: f.name || "Folder", list: chars.filter((c) => c.folder === f.id) }));
+    const loose = chars.filter((c) => !c.folder || !known.has(c.folder));
+    if (loose.length && folders.length) groups.push({ id: "_none", name: "Other", list: loose });
+    return { folders, groups, loose };
   }
+
+  function renderCards() {
+    const { folders, groups } = folderGroups();
+    const tabs = $("#folder-tabs");
+    const box = $("#card-groups");
+    const mode = st().folderDisplay === "sections" ? "sections" : "tabs";
+    if (!folders.length) {
+      tabs.hidden = true;
+      navList = chars;
+      box.innerHTML = `<ul class="cards">${chars.map(cardHTML).join("")}</ul>`;
+      return;
+    }
+    if (mode === "sections") {
+      tabs.hidden = true;
+      const shown = groups.filter((g) => g.list.length);
+      navList = shown.flatMap((g) => g.list);
+      box.innerHTML = shown.map((g) => `
+        <section class="folder-section">
+          <h3 class="folder-title">${esc(g.name)}<small>${g.list.length} ${g.list.length === 1 ? "character" : "characters"}</small></h3>
+          <ul class="cards">${g.list.map(cardHTML).join("")}</ul>
+        </section>`).join("");
+      return;
+    }
+    // tabs
+    const valid = ["all", ...groups.map((g) => g.id)];
+    if (!valid.includes(activeFolder)) activeFolder = "all";
+    tabs.hidden = false;
+    tabs.innerHTML = [{ id: "all", name: "All", list: chars }, ...groups].map((g) =>
+      `<button class="folder-tab${g.id === activeFolder ? " on" : ""}" data-folder="${esc(g.id)}" aria-pressed="${g.id === activeFolder}">${esc(g.name)} <small>${g.list.length}</small></button>`).join("");
+    const list = activeFolder === "all" ? chars : (groups.find((g) => g.id === activeFolder) || { list: [] }).list;
+    navList = list;
+    box.innerHTML = list.length ? `<ul class="cards">${list.map(cardHTML).join("")}</ul>` : `<p class="empty-folder">No characters in this folder yet.</p>`;
+  }
+  $("#folder-tabs").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-folder]");
+    if (!b) return;
+    activeFolder = b.dataset.folder;
+    try { localStorage.setItem("dnd-folder", activeFolder); } catch { /* ignore */ }
+    renderCards();
+  });
 
   const mod = (n) => { const m = Math.floor((Number(n) - 10) / 2); return (m >= 0 ? "+" : "−") + Math.abs(m); };
 
   function detailHTML(c) {
-    const o = [];
-    if (has(c.player)) o.push(`<p class="d-player">Played by ${esc(c.player)}</p>`);
-    o.push(`<h2 class="d-name" id="d-name">${esc(c.name)}</h2>`);
-    if (has(c.epithet)) o.push(`<p class="d-epithet">${esc(c.epithet)}</p>`);
-
+    const head = [];
+    if (has(c.player)) head.push(`<p class="d-player">Played by ${esc(c.player)}</p>`);
+    head.push(`<h2 class="d-name" id="d-name">${esc(c.name)}</h2>`);
+    if (has(c.epithet)) head.push(`<p class="d-epithet">${esc(c.epithet)}</p>`);
     const chips = [c.race, c.class, has(c.level) ? "Level " + c.level : ""].filter(has);
-    if (chips.length) o.push(`<ul class="d-chips">${chips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`);
-    if (has(c.quote)) o.push(`<p class="d-quote">“${esc(c.quote)}”</p>`);
+    if (chips.length) head.push(`<ul class="d-chips">${chips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`);
 
+    const desc = [];
+    if (has(c.quote)) desc.push(`<p class="d-quote">“${esc(c.quote)}”</p>`);
     const bio = Array.isArray(c.bio) ? c.bio : has(c.bio) ? [c.bio] : [];
-    if (bio.filter(has).length) o.push(`<div class="d-bio">${bio.filter(has).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`);
+    if (bio.filter(has).length) desc.push(`<div class="d-bio">${bio.filter(has).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`);
 
     const facts = [
       ["Race", c.race], ["Subrace", c.subrace],
@@ -91,9 +147,13 @@
     const traits = (c.traits || []).filter(has);
     if (traits.length) panel.push(`<h3>Quirks</h3><ul class="traits">${traits.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`);
     if (has(c.goals)) panel.push(`<h3>Goals</h3><p>${esc(c.goals)}</p>`);
-    if (panel.length) o.push(`<div class="panel">${panel.join("")}</div>`);
-    return o.join("");
+    const panelHTML = panel.length ? `<div class="panel">${panel.join("")}</div>` : "";
+    const descHTML = desc.length ? `<div class="d-desc">${desc.join("")}</div>` : "";
+    const pos = detailsPos();
+    const body = pos === "below" ? descHTML + panelHTML : panelHTML + descHTML;
+    return `<div class="d-head">${head.join("")}</div>` + (body ? `<div class="d-body pos-${pos}">${body}</div>` : "");
   }
+  const detailsPos = () => (["above", "below", "beside"].includes(st().detailsPosition) ? st().detailsPosition : "above");
 
   /* ---------- open / switch / close ---------- */
   const detail = $("#detail");
@@ -101,6 +161,10 @@
 
   function fill(c) {
     detail.setAttribute("style", colorVars(c));
+    detail.dataset.pattern = pagePattern(c);
+    detail.dataset.pageBackdrop = st().backdropOnPage ? cardBackdrop(c) : "none";
+    detail.classList.toggle("is-locked", st().lockHeader !== false);
+    ["above", "below", "beside"].forEach((p) => detail.classList.toggle("pos-" + p, detailsPos() === p));
     const scene = $("#detail-scene");
     const bg = imgOf(c, "backgroundImage");
     scene.style.backgroundImage = bg ? `url("${resolve(bg)}")` : "none";
@@ -108,15 +172,17 @@
     $("#detail-word").textContent = firstName(c.name);
     const text = $("#detail-text");
     text.innerHTML = detailHTML(c);
-    [...text.children].forEach((el, n) => el.style.setProperty("--d", n));
+    $$(".d-head > *, .d-body > *", text).forEach((el, n) => el.style.setProperty("--d", n));
     $("#figure").innerHTML = art(c, "detail");
     $("#detail-scroll").scrollTop = 0;
 
-    const prev = chars[(c._n - 1 + chars.length) % chars.length];
-    const next = chars[(c._n + 1) % chars.length];
+    const list = navList.includes(c) ? navList : chars;
+    const at = list.indexOf(c);
+    const prev = list[(at - 1 + list.length) % list.length];
+    const next = list[(at + 1) % list.length];
     $("#prev").href = "#" + prev._id; $("#prev b").textContent = prev.name;
     $("#next").href = "#" + next._id; $("#next b").textContent = next.name;
-    $(".detail-nav").hidden = chars.length < 2;
+    $(".detail-nav").hidden = list.length < 2;
     document.title = `${c.name} · ${siteTitle}`;
   }
 
@@ -191,6 +257,14 @@
   }
 
   /* ---------- events ---------- */
+  detail.addEventListener("wheel", (e) => {
+    if (!detail.classList.contains("is-locked")) return;
+    const inScroller = e.target.closest(".d-desc, .panel");
+    if (inScroller && inScroller.scrollHeight > inScroller.clientHeight) return;
+    const desc = $(".d-desc", detail);
+    if (desc && desc.scrollHeight > desc.clientHeight) { desc.scrollTop += e.deltaY; e.preventDefault(); }
+  }, { passive: false });
+
   $("#close-btn").addEventListener("click", goHome);
   document.addEventListener("keydown", (e) => {
     if (detail.hidden) return;
