@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Characters</title>
+  <meta name="description" content="Meet the characters of our D&D campaign.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="#" class="logo" id="logo">
+      <svg class="logo-die" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 36 11v18L20 38 4 29V11Z M20 2 9 26h22Z M4 11l5 15M36 11l-5 15M9 26l11 12 11-12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/></svg>
+      <span id="logo-text"></span>
+    </a>
+    <nav class="topnav">
+      <a href="#" class="is-active">Characters</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <h1 class="hero-title">Characters</h1>
+        <p class="hero-intro" id="intro"></p>
+        <a class="btn" href="#browse" id="browse-btn">Browse characters</a>
+      </div>
+      <svg class="hero-art" viewBox="0 0 400 400" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M200 20 356 110v180L200 380 44 290V110Z"/>
+          <path d="M200 20 98 250h204Z"/>
+          <path d="M44 110l54 140M356 110l-54 140M98 250l102 130 102-130M44 290l54-40M356 290l-54-40"/>
+          <path d="M200 20 44 110M200 20l156 90"/>
+        </g>
+        <text x="200" y="208" text-anchor="middle" font-family="Rubik, sans-serif" font-weight="900" font-size="62" fill="currentColor">20</text>
+      </svg>
+    </section>
+
+    <!-- Character browser -->
+    <section class="browse" id="browse" aria-labelledby="browse-heading">
+      <h2 class="browse-heading" id="browse-heading">Meet the party</h2>
+      <ul class="cards" id="cards"></ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span id="footer-title"></span>
+    <span>dnd.volbeat.vip</span>
+  </footer>
+
+  <!-- Character detail (opens over the page) -->
+  <div class="detail" id="detail" role="dialog" aria-modal="true" aria-labelledby="d-name" hidden>
+    <div class="detail-bg" id="detail-bg" aria-hidden="true">
+      <div class="detail-scene" id="detail-scene"></div>
+      <div class="detail-word" id="detail-word"></div>
+    </div>
+    <button class="round-btn close-btn" id="close-btn" aria-label="Close">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+    </button>
+    <div class="detail-scroll" id="detail-scroll">
+      <div class="detail-grid">
+        <div class="detail-text" id="detail-text"></div>
+        <div class="detail-figure"><div class="figure-holder" id="figure"></div></div>
+      </div>
+    </div>
+    <nav class="detail-nav" aria-label="Other characters">
+      <a class="nav-arrow prev" id="prev"><span class="round-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="nav-label"><small>Previous</small><b></b></span></a>
+      <a class="nav-arrow next" id="next"><span class="nav-label"><small>Next</small><b></b></span><span class="round-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
+    </nav>
+  </div>
+
+  <script src="js/characters.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
