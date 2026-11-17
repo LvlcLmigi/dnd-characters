@@ -43,10 +43,11 @@
     "name": "Ozaijin",
     "epithet": "Acolyte of Egon",
     "player": "Luigi",
-    "color": "#050505",
+    "color": "#440e1a",
     "hidden": false,
     "cardPattern": "sparkles",
     "shadow": "on",
+    "entrance": "rise",
     "artX": 72,
     "artHeight": 96,
     "artBottom": 0,
@@ -74,6 +75,6 @@
     "traits": [],
     "goals": "",
     "art": "images/characters/ozaijin-mwkx9vc5.png",
-    "backgroundImage": ""
+    "backgroundImage": "images/backgrounds/ozaijin-mwl4x6ma.jpg"
   }
 ]
