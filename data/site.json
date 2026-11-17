@@ -4,6 +4,7 @@
   "intro": "",
   "heroTitle": "My characters",
   "browseHeading": "Inside the fucked up mind of Lmigi LmBrutto.",
+  "folders": [],
   "style": {
     "accent": "#1a5cff",
     "text": "#141a2b",
@@ -14,9 +15,24 @@
     "zoom": 85,
     "cardSize": 260,
     "cardRadius": 32,
-    "pattern": "stripes",
+    "pattern": "dots",
     "showDie": true,
     "heroImage": "",
-    "browseImage": ""
+    "browseImage": "",
+    "heroStyle": "compact",
+    "folderDisplay": "tabs",
+    "shadow": "on",
+    "shadowColor": "#000000",
+    "shadowOpacity": 45,
+    "shadowDistance": 10,
+    "shadowSoftness": 6,
+    "shadowDirection": "down-right",
+    "glow": "none",
+    "glowColor": "#ffffff",
+    "glowSize": 9,
+    "effectsOnPage": true,
+    "lockHeader": true,
+    "detailsPosition": "above",
+    "pagePattern": ""
   }
 }
