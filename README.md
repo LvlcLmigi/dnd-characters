@@ -16,6 +16,7 @@ From there you can:
 - add a drop shadow and a glow or outline that follow the shape of the character art (on cards and their page)
 - choose the character page layout: name and details locked in place with only the story scrolling, the details box above, below or beside the story, plus where the text and art sit on screen (with per-character art position)
 - override the card pattern, page pattern, shadow and glow per character
+- pick entrance animations for characters on their page and for cards on the home page (site-wide or per character)
 - see every change in the live preview before anyone else does
 
 Nothing changes on the real site until you press **Publish**. The site updates about a minute later.

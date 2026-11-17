@@ -134,6 +134,16 @@ html[data-hero="compact"] .browse-heading { margin-bottom: clamp(44px, 5vw, 72px
 .empty-folder { text-align: center; color: var(--ink-2); padding: 40px 0; }
 
 .cards > li { animation: pop-up .7s var(--spring) both; animation-delay: calc(var(--i) * 70ms + 150ms); }
+/* how cards appear on the home page — admin: Site & style → Animations */
+html[data-card-enter="fade"]  .cards > li { animation-name: fade-in; animation-duration: .8s; animation-timing-function: ease; }
+html[data-card-enter="drop"]  .cards > li { animation-name: card-drop; animation-duration: .8s; }
+html[data-card-enter="slide"] .cards > li { animation-name: card-slide; animation-duration: .7s; }
+html[data-card-enter="zoom"]  .cards > li { animation-name: card-zoom; animation-duration: .6s; }
+html[data-card-enter="flip"]  .cards > li { animation-name: enter-flip; animation-duration: .8s; animation-timing-function: var(--ease); }
+html[data-card-enter="none"]  .cards > li { animation: none; }
+@keyframes card-drop  { from { opacity: 0; transform: translateY(-60px) rotate(-3deg); } to { opacity: 1; transform: none; } }
+@keyframes card-slide { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: none; } }
+@keyframes card-zoom  { from { opacity: 0; transform: scale(.5); } to { opacity: 1; transform: none; } }
 
 .card { display: block; text-align: center; outline: none; }
 .card-box {
@@ -370,9 +380,38 @@ html[data-card-sub="off"] .card-sub { display: none; }
 
 /* ---------- Opening & switching animations ---------- */
 .detail.is-open .detail-bg { animation: bg-in .55s var(--ease) both; }
+/* switching character to character: no colour wipe from nothing (that flashed the home page); colours blend instead */
+.detail.is-open.is-switch .detail-bg { animation: none; clip-path: none; }
+.detail.is-open.is-switch .close-btn, .detail.is-open.is-switch .detail-nav { animation: none; }
+.detail-bg { transition: background-color .45s ease; }
+.detail-scene { transition: opacity .45s ease; }
+.detail.is-swapping .detail-scene { opacity: 0 !important; }
 .detail.is-open .d-head > *, .detail.is-open .d-body > * { animation: slide-in .6s var(--ease) both; animation-delay: calc(min(var(--d, 0), 8) * 55ms + 120ms); }
 .detail.is-open .detail-word { animation: word-in 1s .2s var(--ease) both; }
 .detail.is-open .art-pos > * { animation: char-in .9s .55s var(--spring) both; }
+.detail.is-open.is-switch .art-pos > * { animation-delay: .25s; }
+/* character entrances — admin: Site & style → Animations (and per character) */
+.detail.is-open[data-enter="fade"]  .art-pos > * { animation-name: enter-fade; animation-duration: .9s; animation-timing-function: var(--ease); }
+.detail.is-open[data-enter="drop"]  .art-pos > * { animation-name: enter-drop; animation-duration: 1s; animation-timing-function: ease-out; }
+.detail.is-open[data-enter="slide"] .art-pos > * { animation-name: enter-slide; animation-duration: .9s; }
+.detail.is-open[data-enter="rise"]  .art-pos > * { animation-name: enter-rise; animation-duration: 1.1s; animation-timing-function: var(--ease); }
+.detail.is-open[data-enter="zoom"]  .art-pos > * { animation-name: enter-zoom; animation-duration: .8s; }
+.detail.is-open[data-enter="spin"]  .art-pos > * { animation-name: enter-spin; animation-duration: 1s; }
+.detail.is-open[data-enter="flip"]  .art-pos > * { animation-name: enter-flip; animation-duration: .9s; animation-timing-function: var(--ease); }
+.detail.is-open[data-enter="none"]  .art-pos > * { animation: none; }
+@keyframes enter-fade  { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
+@keyframes enter-drop  {
+  0% { opacity: 0; transform: translateY(-75%); }
+  45% { opacity: 1; transform: translateY(0) scale(1.04, .94); }
+  62% { transform: translateY(-5%) scale(.98, 1.03); }
+  78% { transform: translateY(0) scale(1.01, .99); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes enter-slide { 0% { opacity: 0; transform: translateX(45%) rotate(4deg); } 70% { opacity: 1; transform: translateX(-2%) rotate(-.5deg); } 100% { opacity: 1; transform: none; } }
+@keyframes enter-rise  { from { opacity: 0; transform: translateY(30%); } to { opacity: 1; transform: none; } }
+@keyframes enter-zoom  { 0% { opacity: 0; transform: scale(.3); } 65% { opacity: 1; transform: scale(1.06); } 100% { opacity: 1; transform: none; } }
+@keyframes enter-spin  { from { opacity: 0; transform: rotate(-200deg) scale(.25); } to { opacity: 1; transform: none; } }
+@keyframes enter-flip  { from { opacity: 0; transform: perspective(1200px) rotateY(85deg); } to { opacity: 1; transform: none; } }
 .detail.is-open .close-btn, .detail.is-open .detail-nav { animation: fade-in .4s .5s both; }
 .detail.is-swapping .d-head > *, .detail.is-swapping .d-body > *, .detail.is-swapping .art-pos > *, .detail.is-swapping .detail-word { animation: swap-out .25s ease-in both; }
 

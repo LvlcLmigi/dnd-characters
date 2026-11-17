@@ -50,7 +50,7 @@
   /* =========================================================
      Serialising & dirty tracking
      ========================================================= */
-  const CHAR_KEYS = ["id", "name", "epithet", "player", "color", "hidden", "folder", "cardPattern", "pagePattern", "shadow", "glow", "glowColor", "artX", "artHeight", "artBottom", "race", "subrace", "class", "subclass", "multiclass", "level",
+  const CHAR_KEYS = ["id", "name", "epithet", "player", "color", "hidden", "folder", "cardPattern", "pagePattern", "shadow", "glow", "glowColor", "entrance", "artX", "artHeight", "artBottom", "race", "subrace", "class", "subclass", "multiclass", "level",
     "background", "alignment", "deity", "age", "height", "pronouns", "status", "stats", "quote", "bio", "traits", "goals", "extra", "art", "backgroundImage"];
 
   function cleanChar(c) {
@@ -407,6 +407,7 @@
         ${uploadBox("Page background", "backgroundImage", c.backgroundImage, { kind: "bg", help: "Optional scene behind them on their page. It fades into their colour on the text side." })}
       </div>
       <div class="grid" style="margin-top:18px">
+        <label class="field full"><span>How they appear on their page</span>${chipRow("c.entrance", [["", "Site default"], ...D.ENTRANCES], c.entrance || "")}</label>
         <label class="field full"><span>Drop shadow</span>${chipRow("c.shadow", [["", "Site default"], ["on", "On"], ["none", "Off"]], c.shadow || "")}</label>
         <label class="field full"><span>Glow / outline around them</span>${chipRow("c.glow", [["", "Site default"], ...D.GLOWS], c.glow || "")}</label>
         <label class="field"><span>Glow / outline colour</span><span class="color-row">${colorField('data-c="glowColor"', c.glowColor || state.site.style.glowColor)}${c.glowColor ? '<button class="link-btn" data-act="glow-color-reset">Use site colour</button>' : ""}</span></label>
@@ -567,6 +568,15 @@
       </div>
       <button class="btn ghost small" data-act="folder-add" style="margin-top:12px">+ Add folder</button>
       ${folders.length ? `<label class="field" style="margin-top:16px"><span>Show folders on the site as</span>${chipRow("style.folderDisplay", [["tabs", "Tabs to switch between"], ["sections", "Sections, one after another"]], st.folderDisplay)}</label>` : ""}
+    </section>
+
+    <section class="sec">
+      <h2>Animations</h2>
+      <div class="grid">
+        <label class="field full"><span>How characters appear on their page</span>${chipRow("style.charEntrance", D.ENTRANCES, st.charEntrance || "pop")}</label>
+        <label class="field full"><span>How cards appear on the home page</span>${chipRow("style.cardEntrance", D.CARD_ENTRANCES, st.cardEntrance || "pop")}</label>
+      </div>
+      <p class="hint" style="margin:10px 0 0">Each character can also have their own entrance (on their page in admin). Picking one plays it in the preview.</p>
     </section>
 
     <section class="sec">
@@ -901,6 +911,16 @@
       }
       else if (scope === "c" && cur()) { if (val) cur()[key] = val; else delete cur()[key]; }
       $$(`[data-chip="${chip.dataset.chip}"]`).forEach((b) => b.classList.toggle("on", b === chip));
+      if (key === "charEntrance" || key === "entrance") {
+        if (scope === "style" && !state.sitePreviewChar && state.chars[0]) {
+          state.sitePreviewChar = state.chars[0].id;
+          const sel = $("[data-preview-char]"); if (sel) sel.value = state.sitePreviewChar;
+        }
+        state.replayNext = "page";
+      }
+      if (key === "cardEntrance" && scope === "style" && state.sitePreviewChar) {
+        state.sitePreviewChar = ""; const sel = $("[data-preview-char]"); if (sel) sel.value = "";
+      }
       changed({ side: false });
       return;
     }
@@ -1127,6 +1147,7 @@
   });
   function sendPreview() {
     if (!state.previewReady || !state.site || !frame.contentWindow) return;
+    const replayNow = state.replayNext; state.replayNext = "";
     const show = state.view.type === "char" && state.chars[state.view.i] ? state.chars[state.view.i].id
       : state.view.type === "site" && state.chars.some((c) => c.id === state.sitePreviewChar) ? state.sitePreviewChar : "";
     frame.contentWindow.postMessage({
@@ -1135,6 +1156,7 @@
       characters: state.chars.map(cleanChar),
       images: Object.fromEntries(allImagePaths().map((p) => [p, imgUrl(p)])),
       show,
+      replay: replayNow || "",
     }, location.origin);
   }
 

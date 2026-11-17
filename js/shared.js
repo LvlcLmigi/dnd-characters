@@ -40,6 +40,9 @@
       cardsPerRow: 0,                  // 0 = as many as fit
       browsePadTop: 48,                // px above the character section heading
       showCardSub: true,               // race · class under names
+      // animations
+      charEntrance: "pop",             // how a character appears on their page
+      cardEntrance: "pop",             // how cards appear on the home page
       folderDisplay: "tabs",           // tabs | sections
       // pop-out effects on the character art (cards, and optionally their page)
       shadow: "on",                    // on | none   - offset drop shadow
@@ -67,6 +70,8 @@
     ["dots", "Dots"], ["grid", "Grid"], ["stripes", "Stripes"], ["diamonds", "Diamonds"],
     ["checks", "Checks"], ["sparkles", "Sparkles"], ["waves", "Waves"], ["none", "None"],
   ];
+  const ENTRANCES = [["pop", "Pop in"], ["fade", "Fade in"], ["drop", "Drop down"], ["rise", "Rise up"], ["slide", "Slide in"], ["zoom", "Zoom"], ["spin", "Spin"], ["flip", "Flip"], ["none", "None"]];
+  const CARD_ENTRANCES = [["pop", "Pop up"], ["fade", "Fade in"], ["drop", "Drop down"], ["slide", "Slide in"], ["zoom", "Zoom"], ["flip", "Flip"], ["none", "None"]];
   const GLOWS = [["none", "None"], ["glow", "Glow"], ["outline", "Outline"]];
   const SHADOW_DIRS = [["down-left", "↙ Down-left"], ["down", "↓ Down"], ["down-right", "↘ Down-right"]];
 
@@ -183,6 +188,7 @@
     if (per > 0) { r.setProperty("--per-row", String(per)); doc.documentElement.dataset.perRow = String(per); }
     else { r.removeProperty("--per-row"); delete doc.documentElement.dataset.perRow; }
     doc.documentElement.dataset.cardSub = st.showCardSub === false ? "off" : "on";
+    doc.documentElement.dataset.cardEnter = st.cardEntrance || "pop";
 
     const z = Math.max(60, Math.min(160, Number(st.zoom) || 100));
     doc.body.style.zoom = z === 100 ? "" : String(z / 100);
@@ -200,5 +206,5 @@
     }
   }
 
-  window.DND = { FONTS, DEFAULT_SITE, PALETTE, PATTERNS, GLOWS, SHADOW_DIRS, artFilter, inkFor, shade, luminance, fontHref, fontStack, mergeSite, applyStyle };
+  window.DND = { FONTS, DEFAULT_SITE, PALETTE, PATTERNS, ENTRANCES, CARD_ENTRANCES, GLOWS, SHADOW_DIRS, artFilter, inkFor, shade, luminance, fontHref, fontStack, mergeSite, applyStyle };
 })();

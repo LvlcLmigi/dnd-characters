@@ -172,6 +172,7 @@
   function fill(c) {
     detail.setAttribute("style", colorVars(c) + (st().effectsOnPage !== false ? `;--fx-page:${D.artFilter(st(), c, 2.6)}` : "") + ";" + layoutVars(c));
     detail.dataset.pattern = pagePattern(c);
+    detail.dataset.enter = c.entrance || st().charEntrance || "pop";
     detail.classList.toggle("is-locked", st().lockHeader !== false);
     detail.classList.toggle("details-scroll", st().lockDetails === false);
     ["above", "below", "beside"].forEach((p) => detail.classList.toggle("pos-" + p, detailsPos() === p));
@@ -196,13 +197,16 @@
     document.title = `${c.name} · ${siteTitle}`;
   }
 
-  function replay() {
-    detail.classList.remove("is-open", "is-swapping");
+  function replay(isSwitch) {
+    detail.classList.remove("is-open", "is-swapping", "is-switch");
+    if (isSwitch) detail.classList.add("is-switch");
     void detail.offsetWidth;
     detail.classList.add("is-open");
   }
 
   function open(c, quiet) {
+    // hashchange and popstate both fire for one change: don't restart what's already showing / switching
+    if (!quiet && c === current && !detail.hidden) return;
     clearTimeout(swapTimer);
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (quiet && current && !detail.hidden) {          // live preview edit: refresh in place
@@ -211,7 +215,7 @@
       detail.classList.add("is-open");
     } else if (current && current !== c && !detail.hidden && !reduced) {
       detail.classList.add("is-swapping");
-      swapTimer = setTimeout(() => { fill(c); replay(); }, 240);
+      swapTimer = setTimeout(() => { fill(c); replay(true); }, 240);
     } else {
       const card = document.querySelector(`.card[href="#${CSS.escape(c._id)}"] .card-box`);
       fill(c);
@@ -302,6 +306,7 @@
       map.clear();
       Object.entries(e.data.images || {}).forEach(([k, v]) => map.set(k, v));
       setData(e.data.site, e.data.characters, { quiet: true });
+      if (e.data.replay === "page" && current && !detail.hidden) replay(false);
       if (e.data.show !== undefined) {
         const want = e.data.show ? "#" + e.data.show : "";
         if (location.hash !== want) {
