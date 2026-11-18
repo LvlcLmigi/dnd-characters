@@ -84,5 +84,41 @@
     "goals": "",
     "art": "images/characters/ozaijin-mwl5b59p.png",
     "backgroundImage": "images/backgrounds/ozaijin-mwl4x6ma.jpg"
+  },
+  {
+    "id": "astre",
+    "name": "Astre",
+    "epithet": "",
+    "player": "Luigi",
+    "color": "#f3e4af",
+    "hidden": false,
+    "cardPattern": "diamonds",
+    "entrance": "rise",
+    "race": "Human",
+    "subrace": "Variant",
+    "class": "Wizard",
+    "subclass": "Conjuration",
+    "multiclass": "",
+    "level": "",
+    "background": "",
+    "alignment": "",
+    "deity": "",
+    "age": "",
+    "height": "",
+    "pronouns": "",
+    "status": "",
+    "stats": {},
+    "quote": "",
+    "bio": [
+      "# Father Lost\nA boy watches his father lose himself in obsession over make-believe. The boy can do nothing while the man pores through ancient scrolls and conjures lost magic. The man splits a fault line between two levels of reality and enters the **domain of faeries**. The doorway between the real world and the world of fiction locks behind him. The boy, Astre, is left alone.",
+      "# A Quick Study",
+      "Like father, like son, Astre too has a talent for certain magicks. His specialty is in the **School of Conjuration**, the same school of his magic that his father dabbled in. He studied under the tutelage of **Sinsara**, a summoner of beasts and binder of monsters. Using her teachings and his father's notes, Astre has been able to pierce the veil between the mortal plane and the feywild, but never enough to enter it himself.",
+      "# Thinking with Portals",
+      "Working as a courier, a job his teleportation magic was particularly suited for, Astre heard tell of a group of individuals by the name of \"**The Death Knights**\" who had access to powerful magic. He sought them out, and luckily he did. He caught a suspicious purple-haired woman pilfering their belongings and then disappearing without a trace. After alerting them of this, they asked him to join their group, agreeing to help him track down his father in exchange for his help catching the thief."
+    ],
+    "traits": [],
+    "goals": "",
+    "art": "images/characters/new-character-mwla3404.png",
+    "backgroundImage": "images/backgrounds/new-character-mwla996g.jpg"
   }
 ]
