@@ -7,7 +7,8 @@ A "meet the characters" site for our D&D campaign: a browse grid of character ca
 Go to **dnd.volbeat.vip/admin.html** (or the small "Admin" link in the footer).
 
 From there you can:
-- add, edit, reorder, hide, duplicate and delete characters
+- add, edit, hide, duplicate and delete characters
+- arrange characters: drag them into order (or between folders) in "Arrange characters" or the sidebar, with quick sorts (A–Z, Z–A, level, colour)
 - upload character art and page backgrounds (images are resized automatically; transparent PNGs get their empty edges trimmed)
 - import a character from D&D Beyond (the "Export to PDF" file, a public character link, or the one-click bookmark)
 - sort characters into folders (shown on the site as tabs or as sections)

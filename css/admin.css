@@ -283,3 +283,23 @@ h1, h2, h3 { letter-spacing: -.01em; }
 .fmt-box textarea:focus { outline: none; }
 .fmt-help { font-size: 12px; color: var(--ink-3); line-height: 1.8; }
 .fmt-help code { font-size: 11px; }
+
+/* ---------- arranging ---------- */
+.char-item[draggable="true"] { cursor: grab; }
+.char-item.dragging, .arr-tile.dragging { opacity: .35; }
+.char-item.drop-before { box-shadow: inset 0 3px 0 var(--blue); }
+.char-item.drop-after { box-shadow: inset 0 -3px 0 var(--blue); }
+.folder-head.drop-into, .arr-group.drop-into { outline: 2px dashed var(--blue); outline-offset: 2px; border-radius: 10px; background: #eef3ff; }
+.arr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-top: 12px; min-height: 60px; }
+.arr-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border-radius: 16px; cursor: grab; text-align: center; transition: background .15s; }
+.arr-tile:hover { background: #f3f6fc; }
+.arr-tile.drop-before { box-shadow: inset 4px 0 0 var(--blue); }
+.arr-tile.drop-after { box-shadow: inset -4px 0 0 var(--blue); }
+.arr-tile.is-hidden .arr-card { opacity: .45; }
+.arr-card { position: relative; width: 100%; aspect-ratio: 1; border-radius: 16px; background: var(--c); overflow: hidden; display: grid; place-items: center; font-weight: 900; font-size: 30px; }
+.arr-card img { position: absolute; inset: 6% 0 0; width: 100%; height: 100%; object-fit: contain; object-position: bottom; pointer-events: none; }
+.arr-num { position: absolute; top: 6px; left: 6px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,.92); color: var(--ink); font-size: 12px; font-weight: 800; display: grid; place-items: center; }
+.arr-tile b { font-size: 14px; line-height: 1.2; }
+.arr-btns { display: flex; align-items: center; gap: 4px; }
+.arr-btns .icon-btn { width: 30px; height: 30px; }
+.arr-btns select { height: 30px; max-width: 96px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 12px; background: #fff; }

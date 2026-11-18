@@ -264,13 +264,14 @@
   function renderSide() {
     $("#nav-site").classList.toggle("on", state.view.type === "site");
     $("#nav-import").classList.toggle("on", state.view.type === "import");
+    $("#nav-arrange").classList.toggle("on", state.view.type === "arrange");
     const list = $("#char-list");
     if (!state.chars.length) { list.innerHTML = `<li class="empty-list">No characters yet.</li>`; return; }
     const item = (c, i) => {
       const col = c.color || D.PALETTE[i % D.PALETTE.length];
       const on = state.view.type === "char" && state.view.i === i;
       const sub = [c.race, c.class].filter(has).join(" · ") || (c.hidden ? "Hidden" : "");
-      return `<li><button class="char-item${on ? " on" : ""}${c.hidden ? " is-hidden" : ""}" data-char="${i}" style="--c:${esc(col)}">
+      return `<li><button class="char-item${on ? " on" : ""}${c.hidden ? " is-hidden" : ""}" data-char="${i}" draggable="true" title="Drag to reorder" style="--c:${esc(col)}">
         <span class="char-thumb" style="color:${D.inkFor(col)}">${c.art ? `<img src="${esc(imgUrl(c.art))}" alt="">` : esc(initials(c.name))}</span>
         <span class="char-meta"><b>${esc(c.name || "Untitled")}</b><small>${esc(sub)}${c.hidden ? " · hidden" : ""}</small></span>
         ${charChanged(c) ? '<span class="dot" title="Not published yet"></span>' : ""}
@@ -279,16 +280,117 @@
     const folders = state.site.folders || [];
     if (!folders.length) { list.innerHTML = state.chars.map(item).join(""); return; }
     const known = new Set(folders.map((f) => f.id));
-    const groups = folders.map((f) => ({ name: f.name || "Folder", items: state.chars.map((c, i) => [c, i]).filter(([c]) => c.folder === f.id) }));
-    groups.push({ name: "No folder", items: state.chars.map((c, i) => [c, i]).filter(([c]) => !c.folder || !known.has(c.folder)) });
+    const groups = folders.map((f) => ({ id: f.id, name: f.name || "Folder", items: state.chars.map((c, i) => [c, i]).filter(([c]) => c.folder === f.id) }));
+    groups.push({ id: "", name: "No folder", items: state.chars.map((c, i) => [c, i]).filter(([c]) => !c.folder || !known.has(c.folder)) });
     list.innerHTML = groups.filter((g, n) => g.items.length || n < groups.length - 1)
-      .map((g) => `<li class="folder-head">${esc(g.name)} <small>${g.items.length}</small></li>${g.items.map(([c, i]) => item(c, i)).join("") || '<li class="empty-list">Empty</li>'}`).join("");
+      .map((g) => `<li class="folder-head" data-drop-folder="${esc(g.id)}">${esc(g.name)} <small>${g.items.length}</small></li>${g.items.map(([c, i]) => item(c, i)).join("") || '<li class="empty-list">Empty</li>'}`).join("");
   }
   $("#char-list").addEventListener("click", (e) => {
     const b = e.target.closest("[data-char]");
     if (b) go({ type: "char", i: Number(b.dataset.char) });
   });
   $("#nav-site").addEventListener("click", () => go({ type: "site" }));
+  $("#nav-arrange").addEventListener("click", () => go({ type: "arrange" }));
+
+  /* ---------- re-ordering (sidebar + Arrange view) ---------- */
+  const folderIds = () => new Set((state.site.folders || []).map((f) => f.id));
+  const groupOf = (c) => (c.folder && folderIds().has(c.folder) ? c.folder : "");
+  // move character `from` next to character `to` (before/after); folder: undefined = keep, "" = none, id = that folder
+  function moveChar(from, to, after, folder) {
+    if (from === to && folder === undefined) return;
+    const selected = cur();
+    const c = state.chars[from], target = state.chars[to];
+    state.chars.splice(from, 1);
+    let at = state.chars.indexOf(target);
+    if (at === -1) at = state.chars.length; else if (after) at++;
+    state.chars.splice(at, 0, c);
+    if (folder !== undefined) { if (folder) c.folder = folder; else delete c.folder; }
+    afterMove(selected);
+  }
+  // move character to the end of a folder group ("" = no folder)
+  function moveToGroup(from, folder) {
+    const selected = cur();
+    const c = state.chars[from];
+    state.chars.splice(from, 1);
+    if (folder) c.folder = folder; else delete c.folder;
+    let last = -1;
+    state.chars.forEach((x, i) => { if (x !== c && groupOf(x) === folder) last = i; });
+    state.chars.splice(last === -1 ? state.chars.length : last + 1, 0, c);
+    afterMove(selected);
+  }
+  function afterMove(selected) {
+    if (state.view.type === "char" && selected) state.view.i = state.chars.indexOf(selected);
+    renderSide();
+    if (state.view.type === "arrange") renderEditor();
+    changed();
+  }
+  function sortChars(kind) {
+    const name = (c) => String(c.name || "").toLowerCase();
+    const cmp = {
+      az: (a, b) => name(a).localeCompare(name(b)),
+      za: (a, b) => name(b).localeCompare(name(a)),
+      level: (a, b) => (Number(b.level) || 0) - (Number(a.level) || 0) || name(a).localeCompare(name(b)),
+      color: (a, b) => (D.luminance(a.color || "#000") - D.luminance(b.color || "#000")),
+    }[kind];
+    if (!cmp) return;
+    state.chars.sort(cmp);   // groups come from each character's folder, so this sorts within every folder
+    afterMove(null);
+    toast("Sorted. The preview shows the new order; publish to keep it.");
+  }
+
+  let dragFrom = null;
+  function dropTargetInfo(e) {
+    const tile = e.target.closest("[data-char], [data-arr]");
+    if (tile) {
+      const idx = Number(tile.dataset.char ?? tile.dataset.arr);
+      const r = tile.getBoundingClientRect();
+      const horizontal = tile.matches("[data-arr]");
+      const after = horizontal ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+      return { el: tile, idx, after };
+    }
+    const grp = e.target.closest("[data-drop-folder], [data-arr-group]");
+    if (grp) return { el: grp, folder: grp.dataset.dropFolder ?? grp.dataset.arrGroup };
+    return null;
+  }
+  function clearDropMarks() { $$(".drop-before, .drop-after, .drop-into").forEach((x) => x.classList.remove("drop-before", "drop-after", "drop-into")); }
+  function onDragStart(e) {
+    const t = e.target.closest("[data-char], [data-arr]");
+    if (!t) return;
+    dragFrom = Number(t.dataset.char ?? t.dataset.arr);
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", String(dragFrom)); } catch { /* ignore */ }
+    t.classList.add("dragging");
+  }
+  function onDragOver(e) {
+    if (dragFrom === null) return;
+    const info = dropTargetInfo(e);
+    if (!info) return;
+    e.preventDefault();
+    clearDropMarks();
+    if (info.idx !== undefined) info.el.classList.add(info.after ? "drop-after" : "drop-before");
+    else info.el.classList.add("drop-into");
+  }
+  function onDrop(e) {
+    if (dragFrom === null) return;
+    const info = dropTargetInfo(e);
+    e.preventDefault();
+    clearDropMarks();
+    const from = dragFrom; dragFrom = null;
+    if (!info) return;
+    if (info.idx !== undefined) {
+      if (info.idx === from) return;
+      const target = state.chars[info.idx];
+      const folder = groupOf(target) !== groupOf(state.chars[from]) ? groupOf(target) : undefined;
+      moveChar(from, info.idx, info.after, folder);
+    } else moveToGroup(from, info.folder);
+  }
+  function onDragEnd() { dragFrom = null; clearDropMarks(); $$(".dragging").forEach((x) => x.classList.remove("dragging")); }
+  [$("#char-list"), $("#editor")].forEach((el) => {
+    el.addEventListener("dragstart", onDragStart);
+    el.addEventListener("dragover", onDragOver);
+    el.addEventListener("drop", onDrop);
+    el.addEventListener("dragend", onDragEnd);
+  });
   $("#nav-import").addEventListener("click", () => go({ type: "import", target: null }));
   $("#btn-new").addEventListener("click", () => {
     const c = newCharacter();
@@ -345,6 +447,7 @@
     const ed = $("#editor");
     if (state.view.type === "char" && state.chars[state.view.i]) ed.innerHTML = charView(state.chars[state.view.i], state.view.i);
     else if (state.view.type === "import") ed.innerHTML = importView();
+    else if (state.view.type === "arrange") ed.innerHTML = arrangeView();
     else { state.view = { type: "site" }; ed.innerHTML = siteView(); }
     const bm = $("#bookmarklet");
     if (bm) bm.setAttribute("href", I.BOOKMARKLET);
@@ -663,6 +766,45 @@
     </section>`;
   }
 
+  /* ---------- arrange view ---------- */
+  function arrangeView() {
+    const folders = state.site.folders || [];
+    const groups = folders.length
+      ? [...folders.map((f) => ({ id: f.id, name: f.name || "Folder" })), { id: "", name: "No folder" }]
+      : [{ id: "", name: "" }];
+    const tile = (c, i, list, n) => {
+      const col = c.color || D.PALETTE[i % D.PALETTE.length];
+      return `<div class="arr-tile${c.hidden ? " is-hidden" : ""}" data-arr="${i}" draggable="true" style="--c:${esc(col)}">
+        <div class="arr-card">${c.art ? `<img src="${esc(imgUrl(c.art))}" alt="" draggable="false">` : `<span style="color:${D.inkFor(col)}">${esc(initials(c.name))}</span>`}<span class="arr-num">${n + 1}</span></div>
+        <b>${esc(c.name || "Untitled")}</b>
+        <div class="arr-btns">
+          <button class="icon-btn" data-act="arr-left" data-i="${i}" ${n === 0 ? "disabled" : ""} aria-label="Move earlier">←</button>
+          ${folders.length ? `<select data-arr-folder="${i}" aria-label="Folder"><option value="">No folder</option>${folders.map((f) => `<option value="${esc(f.id)}"${f.id === c.folder ? " selected" : ""}>${esc(f.name)}</option>`).join("")}</select>` : ""}
+          <button class="icon-btn" data-act="arr-right" data-i="${i}" ${n === list.length - 1 ? "disabled" : ""} aria-label="Move later">→</button>
+        </div>
+      </div>`;
+    };
+    const body = groups.map((g) => {
+      const list = state.chars.map((c, i) => [c, i]).filter(([c]) => groupOf(c) === g.id);
+      if (!folders.length && !list.length) return `<p class="hint">No characters yet.</p>`;
+      return `<section class="sec arr-group" data-arr-group="${esc(g.id)}">
+        ${g.name ? `<h2>${esc(g.name)} <small style="font-weight:500;color:var(--ink-3)">${list.length}</small></h2>` : ""}
+        <div class="arr-grid">${list.map(([c, i], n) => tile(c, i, list, n)).join("") || '<p class="hint" style="margin:0">Drag characters here.</p>'}</div>
+      </section>`;
+    }).join("");
+    return `<div class="ed-head"><div><h1>Arrange characters</h1><p>The order they appear in on the home page. Drag them around${folders.length ? ", or between folders to move them" : ""}.</p></div></div>
+      <div class="sec">
+        <h2>Quick sort</h2>
+        <div class="chips" style="margin-top:10px">
+          <button class="chip" data-act="sort" data-sort="az">Name A–Z</button>
+          <button class="chip" data-act="sort" data-sort="za">Name Z–A</button>
+          <button class="chip" data-act="sort" data-sort="level">Highest level first</button>
+          <button class="chip" data-act="sort" data-sort="color">By colour</button>
+        </div>
+      </div>
+      ${body}`;
+  }
+
   /* ---------- import view ---------- */
   function importView() {
     const target = state.view.target != null ? state.chars[state.view.target] : null;
@@ -849,6 +991,7 @@
       changed({ side: false });
       return;
     }
+    if (el.matches("[data-arr-folder]")) { moveToGroup(Number(el.dataset.arrFolder), el.value); return; }
     if (el.matches("[data-preview-char]")) { state.sitePreviewChar = el.value; sendPreview(); return; }
     if (el.dataset.folderName !== undefined) {
       const f = state.site.folders[Number(el.dataset.folderName)];
@@ -1044,6 +1187,15 @@
         ["textLeft", "textWidth", "textTop", "artX", "artHeight", "artBottom"].forEach((k) => { state.site.style[k] = D.DEFAULT_SITE.style[k]; });
         renderEditor(); changed({ side: false });
         break;
+      case "sort": sortChars(act.dataset.sort); break;
+      case "arr-left": case "arr-right": {
+        const i0 = Number(act.dataset.i), g = groupOf(state.chars[i0]);
+        const same = state.chars.map((x, j) => [x, j]).filter(([x]) => groupOf(x) === g).map(([, j]) => j);
+        const k = same.indexOf(i0), j = same[act.dataset.act === "arr-left" ? k - 1 : k + 1];
+        if (j === undefined) return;
+        moveChar(i0, j, act.dataset.act === "arr-right");
+        break;
+      }
       case "glow-color-reset":
         delete c.glowColor;
         renderEditor(); changed({ side: false });
