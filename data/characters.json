@@ -117,5 +117,40 @@
     "goals": "",
     "art": "images/characters/ozaijin-mwl5b59p.png",
     "backgroundImage": "images/backgrounds/ozaijin-mwl4x6ma.jpg"
+  },
+  {
+    "id": "new-character",
+    "name": "New character",
+    "epithet": "",
+    "player": "",
+    "color": "#d8274d",
+    "hidden": false,
+    "race": "",
+    "subrace": "",
+    "class": "",
+    "subclass": "",
+    "multiclass": "",
+    "level": 1,
+    "background": "",
+    "alignment": "",
+    "deity": "",
+    "age": "",
+    "height": "",
+    "pronouns": "",
+    "status": "Alive",
+    "stats": {
+      "STR": 10,
+      "DEX": 10,
+      "CON": 10,
+      "INT": 10,
+      "WIS": 10,
+      "CHA": 10
+    },
+    "quote": "",
+    "bio": [],
+    "traits": [],
+    "goals": "",
+    "art": "images/characters/new-character-mwllhhs4.png",
+    "backgroundImage": ""
   }
 ]
